@@ -1,4 +1,4 @@
-CC=cc
+CC=g++
 CFLAGS = -g
 OBJS=tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a
 

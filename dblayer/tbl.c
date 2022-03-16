@@ -1,11 +1,11 @@
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include "tbl.h"
 #include "codec.h"
-#include "../pflayer/pf.h"
+extern "C" {
+	#include "../pflayer/pf.h"
+}
 
 #define SLOT_COUNT_OFFSET 2
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(EXIT_FAILURE);}}
@@ -66,34 +66,34 @@ int getFreePtr(byte *pageBuf) {
    If successful, it returns an initialized Table*.
  */
 int
-Table_Open(char *dbname, Schema *schema, bool overwrite, Table **ptable)
+Table_Open(std::string dbname, Schema *schema, bool overwrite, Table **ptable)
 {
 	// UNIMPLEMENTED;
 	PF_Init();
-	FILE *fname = fopen(dbname, "r");
+	FILE *fname = fopen(&dbname[0], "r");
 	if(fname) { // If the file exists...
 		fclose(fname);
 		if(overwrite)
-			PF_DestroyFile(dbname); // ...delete the file if the overwrite flag is 1.
+			PF_DestroyFile(&dbname[0]); // ...delete the file if the overwrite flag is 1.
 		else {
 			// In the case where overwrite is 0 and we are using a database that is already present, just open the file
 			// Create a new table and store the relevant information into it
 			Table *newTable = (Table*) malloc(sizeof(Table)); 
 			newTable->schema = schema;
-			newTable->fd = PF_OpenFile(dbname);
+			newTable->fd = PF_OpenFile(&dbname[0]);
 			*ptable = newTable;
 			return 0;
 		}
 	}
 
-	int errval = PF_CreateFile(dbname);
+	int errval = PF_CreateFile(&dbname[0]);
 	if(errval < 0) // Create a new file using the pflayer.
 		return errval;
 	
 	// Create a new table and store the relevant information into it
 	Table *newTable = (Table*) malloc(sizeof(Table));
 	newTable->schema = schema;
-	newTable->fd = PF_OpenFile(dbname);
+	newTable->fd = PF_OpenFile(&dbname[0]);
 
 	*ptable = newTable;
 	return 0;

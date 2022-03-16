@@ -1,10 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 #include "codec.h"
 #include "tbl.h"
 #include "util.h"
-#include "../pflayer/pf.h"
-#include "../amlayer/am.h"
+
+extern "C" {
+	#include "../pflayer/pf.h"
+	#include "../amlayer/am.h"
+}
+
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
 
 
@@ -92,57 +99,83 @@ index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value) {
 	// ----
 }
 
+// std::vector<std::string> split(const std::string &s, char delim) {
+//     std::vector<std::string> elems;
+//     split(s, delim, elems);
+//     return elems;
+// }
+
+bool BothAreSpaces(char lhs, char rhs) { return (isspace(lhs)) && (isspace(rhs)); }
+
 int
 main(int argc, char **argv) {
-	char *schemaTxt = "Country:varchar,Capital:varchar,Population:int";
-	Schema *schema = parseSchema(schemaTxt);
+	std::string schemaTxt = "Country:varchar,Capital:varchar,Population:int";
+	Schema *schema = parseSchema(&schemaTxt[0]);
 	Table *tbl;
 
 	// UNIMPLEMENTED;
 	// ----
 	Table_Open(DB_NAME, schema, false, &tbl);   // Open the database and load table into memory
 	// ----
+	
+	std::cout << "Welcome. Type `help` for help." << std::endl;
 
-	if (argc == 2 && *(argv[1]) == 's') {
-		// UNIMPLEMENTED ;
-		// invoke Table_Scan with printRow, which will be invoked for each row in the table.
-		// ----
-		Table_Scan(tbl, schema, printRow);  // Sequentially scan the table
-		// ----
-	} 
-	else if(argc == 4 && *(argv[1]) == 'i') {
-		// index scan by default
-		int indexFD = PF_OpenFile(INDEX_NAME);
-		checkerr(indexFD);
+	std::string input;
+	while(std::getline(std::cin, input)) {
+		std::string::iterator new_end = std::unique(input.begin(), input.end(), BothAreSpaces);
+		input.erase(new_end, input.end());   
 
-		// Ask for populations less than 100000, then more than 100000. Together they should
-		// yield the complete database.
-		int op = -1;
+		std::vector<std::string> splitInput{};
 
-		if(stricmp(argv[2], "EQUAL")==0) op = 1;
-		if(stricmp(argv[2], "LESS_THAN")==0) op = 2;
-		if(stricmp(argv[2], "GREATER_THAN")==0) op = 3;
-		if(stricmp(argv[2], "LESS_THAN_EQUAL")==0) op = 4;
-		if(stricmp(argv[2], "GREATER_THAN_EQUAL")==0) op = 5;
-		if(stricmp(argv[2], "NOT_EQUAL")==0) op = 6;
+	    size_t pos = 0;
+	    std::string tmpInput = input;
+	    std::string space_delimiter = " ";
+	    while ((pos = input.find(space_delimiter)) != std::string::npos) {
+	        splitInput.push_back(input.substr(0, pos));
+	        input.erase(0, pos + space_delimiter.length());
+	    }
+	    splitInput.push_back(input);
+	    input = tmpInput;
+
+		if(input == "quit" or input == "exit")
+			break;
+		// if (argc == 2 && *(argv[1]) == 's')
+		else if(input == "dump all") {
+			// UNIMPLEMENTED ;
+			// invoke Table_Scan with printRow, which will be invoked for each row in the table.
+			// ----
+			Table_Scan(tbl, schema, printRow);  // Sequentially scan the table
+			// ----
+		} 
+		else if(splitInput.size() == 3 && splitInput[0] == "dump") {
+			// index scan by default
+			int indexFD = PF_OpenFile(INDEX_NAME);
+			checkerr(indexFD);
+
+			// Ask for populations less than 100000, then more than 100000. Together they should
+			// yield the complete database.
+			int op = -1;
+
+			if(splitInput[1] == "EQUAL" || splitInput[1] == "eq") op = 1;
+			if(splitInput[1] == "LESS_THAN" || splitInput[1] == "lt") op = 2;
+			if(splitInput[1] == "GREATER_THAN" || splitInput[1] == "gt") op = 3;
+			if(splitInput[1] == "LESS_THAN_EQUAL" || splitInput[1] == "leq") op = 4;
+			if(splitInput[1] == "GREATER_THAN_EQUAL" || splitInput[1] == "geq") op = 5;
+			if(splitInput[1] == "NOT_EQUAL" || splitInput[1] == "neq") op = 6;
+			
+			if(op == -1)
+				printf("Invalid operation\n");
+			else
+				index_scan(tbl, schema, indexFD, op, stoi(splitInput[2]));
+		}
+		else if(input == "help") {
+			std::cout << "Type 'dump all' to dump all data, 'dump [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
+		}
+		else {
+			printf("Invalid arguments!\n");
+		}
+		std::cout << std::endl;
 		
-		if(op == -1)
-			printf("Invalid operation\n");
-		else
-			index_scan(tbl, schema, indexFD, op, atoi(argv[3]));
-	}
-	else if(argc == 2 && *(argv[1]) == 'i') {
-		// index scan by default
-		int indexFD = PF_OpenFile(INDEX_NAME);
-		checkerr(indexFD);
-
-		// Ask for populations less than 100000, then more than 100000. Together they should
-		// yield the complete database.
-		index_scan(tbl, schema, indexFD, LESS_THAN_EQUAL, 100000);
-		index_scan(tbl, schema, indexFD, GREATER_THAN, 100000);
-	}
-	else{
-		printf("Invalid arguments!\n");
 	}
 	Table_Close(tbl);
 }

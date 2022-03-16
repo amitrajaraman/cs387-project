@@ -518,6 +518,6 @@ AUTHOR: clc
         for(bpage = PFfirstbpage; bpage != NULL; bpage= bpage->nextpage)
             printf("%d\t%d\t%d\t%d\t%d\n",
                    bpage->fd,bpage->page,(int)bpage->fixed,
-                   (int)bpage->dirty,(int)&bpage->fpage);
+                   (int)bpage->dirty,(int) &(bpage->fpage));
     }
 }

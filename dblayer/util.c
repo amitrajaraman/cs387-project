@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
+#include <iostream>
 #include "tbl.h"
 #include "util.h"
 
@@ -32,24 +33,24 @@ char *trim(char *str)
   an array of token*'s. 
 */
 int 
-split(char *buf, char *delim, char **tokens) {
-    char *token = strtok(buf, delim);
+split(char *buf, std::string delim, char **tokens) {
+    char *token = strtok(buf, &delim[0]);
     int n = 0;
     while(token) {
 	tokens[n] = trim(token);
-	token = strtok(NULL, delim);
+	token = strtok(NULL, &delim[0]);
 	n++;
     }
     return n;
 }
 
 Schema *
-parseSchema(char *buf) {
+parseSchema(char* buf) {
     buf = strdup(buf);
     char *tokens[MAX_TOKENS];
     int n = split(buf, ",", tokens);
-    Schema *sch = malloc(sizeof(Schema));
-    sch->columns = malloc(n * sizeof(ColumnDesc *));
+    Schema *sch = (Schema *) malloc(sizeof(Schema));
+    sch->columns = (ColumnDesc **) malloc(n * sizeof(ColumnDesc *));
     // strtok is terrible; it depends on global state.
     // Do one split based on ',".
     // Could use strtok_s for this use case

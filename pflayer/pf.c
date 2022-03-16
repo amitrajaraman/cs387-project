@@ -5,7 +5,7 @@
 #include <sys/file.h>
 #include "pf.h"
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include "pftypes.h"
 #include "pfinternals.h"
 #include <unistd.h>

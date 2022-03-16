@@ -1,6 +1,8 @@
 #ifndef _TBL_H_
 #define _TBL_H_
 #include <stdbool.h>
+#include <iostream>
+#include <cstring>
 
 #define VARCHAR 1
 #define INT     2
@@ -27,7 +29,7 @@ typedef struct {
 typedef int RecId;
 
 int
-Table_Open(char *fname, Schema *schema, bool overwrite, Table **table);
+Table_Open(std::string fname, Schema *schema, bool overwrite, Table **table);
 
 int
 Table_Insert(Table *t, byte *record, int len, RecId *rid);

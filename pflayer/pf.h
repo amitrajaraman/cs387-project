@@ -78,7 +78,7 @@ IMPLEMENTATION NOTES:
 	A file opened more than once will have different file descriptors
 	returned. Separate buffers are used.
 *****************************************************************************/
-int PF_OpenFile(char *fname		/* name of the file to open */);
+int PF_OpenFile(char* fname		/* name of the file to open */);
 
 int PF_CloseFile(int fd /* file descriptor to close */);
 
