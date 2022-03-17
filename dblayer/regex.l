@@ -1,6 +1,7 @@
 %{
 	#include <string>
 	#include <iostream>
+	#include <vector>
 	#include "parse.tab.h"
 	struct tokens {
 		std::string token_name;
@@ -87,6 +88,18 @@ alpha [a-zA-Z]
 	add("HELP", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
 	return HELP;
+}
+
+"," {
+	add("COMMA", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
+	return COMMA;
+}
+
+{alpha}({alpha}|{digit})* {
+	add("COLUMN", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
+	return COLUMN;
 }
 
 [\n] {

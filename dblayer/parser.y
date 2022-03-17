@@ -1,4 +1,5 @@
 %{
+	// #include <vector>
 	#include "dumpdb.c"
 
 	#define DB_NAME "data.db"
@@ -23,11 +24,14 @@
 	extern struct tokens token_table[1000];
 %}
 %union {
-	std::string* name;
+	std::string *name;
+	std::vector<std::string> *colList;
 }
-%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA
 %token <name> NUM
+%token <name> COLUMN
 
+%type <colList> column_list
 
 %%
 
@@ -38,9 +42,24 @@ program : QUIT {
 		std::cout << "Type 'dump all' to dump all data, 'dump all where [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
 	}
 	| DUMP STAR {
-		Table_Scan(tbl, schema, printRow);
+		printAllRows(tbl, schema, printRow, NULL);
+	}
+	| DUMP column_list {
+		printAllRows(tbl, schema, printRow, $2);
 	}
 	| DUMP STAR WHERE condition_list
+	| DUMP column_list WHERE condition_list {
+
+	}
+
+column_list : COLUMN {
+		$$ = new std::vector<std::string>;
+		$$->push_back(*($1));
+	}
+	| column_list COMMA COLUMN {
+		$$ = $1;
+		$$->push_back(*($3));
+	}
 
 condition_list : condition
 
