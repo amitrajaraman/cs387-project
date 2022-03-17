@@ -83,6 +83,12 @@ alpha [a-zA-Z]
 	return NEQ;
 }
 
+"help" {
+	add("HELP", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
+	return HELP;
+}
+
 [\n] {
 	return -1;
 }

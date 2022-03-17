@@ -25,7 +25,7 @@
 %union {
 	std::string* name;
 }
-%token DUMP STAR WHERE QUIT LT GT LEQ GEQ EQ NEQ
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ
 %token <name> NUM
 
 
@@ -33,6 +33,9 @@
 
 program : QUIT {
 		stopFlag = 1;
+	}
+	| HELP {
+		std::cout << "Type 'dump all' to dump all data, 'dump all where [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
 	}
 	| DUMP STAR {
 		Table_Scan(tbl, schema, printRow);
