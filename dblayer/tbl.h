@@ -41,7 +41,7 @@ Table_Get(Table *t, RecId rid, byte *record, int maxlen);
 void
 Table_Close(Table *);
 
-typedef void (*ReadFunc)(void *callbackObj, RecId rid, byte *row, int len, std::vector<std::string> *colList);
+typedef void (*ReadFunc)(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted);
 
 void
 Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn);
