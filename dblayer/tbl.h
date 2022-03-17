@@ -1,7 +1,7 @@
 #ifndef _TBL_H_
 #define _TBL_H_
 #include <stdbool.h>
-#include <iostream>
+#include <string>
 #include <cstring>
 
 #define VARCHAR 1
