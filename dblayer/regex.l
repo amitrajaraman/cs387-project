@@ -116,12 +116,13 @@ alpha [a-zA-Z]
 	return FILE_NAME;
 }
 
-
 %%
+
 
 void add(std::string t, std::string l, int ln) {
 	token_table[counting].token_name = t;
 	token_table[counting].lexeme = l;
 	token_table[counting].lineno = ln;
+	// std::cout << t << " " << l << std::endl;
 	counting++;
 }

@@ -108,7 +108,7 @@ program : QUIT {
 	| DUMP STAR NAME WHERE condition_list
 	| DUMP column_list NAME WHERE condition_list
 
-column_data_type_list : NAME
+// column_data_type_list : NAME
 
 column_list : NAME {
 		$$ = new std::vector<std::string>;
@@ -146,7 +146,8 @@ int
 main(int argc, char **argv) {
 
 	yyset_in(stdin);
-	yyset_out(stdout);	
+	yyset_out(stdout);
+
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
 
