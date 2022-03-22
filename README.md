@@ -1,13 +1,13 @@
-# cs387-project
+# Transaction Management
 
-This is the git repository which hosts the code for our CS387-Project. 
+This is the Git repository which hosts the code for our CS387 project, that deals with transaction management. 
 The team consists of four members:
 1. Amit Rajaraman - 190050015
 2. Aman Yadav - 190050013
 3. Akash Cherukuri - 190050009
 4. Vigna Surapaneni - 190050121
 
-# Running the code
+## Running the code
 
 * Perform `make` in each of the directories `pflayer`, `amlayer`, and `dblayer` in that order.
 * From `dblayer`, run `./interface` to open the terminal.
