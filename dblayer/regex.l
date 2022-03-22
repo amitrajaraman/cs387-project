@@ -24,6 +24,7 @@ alpha [a-zA-Z]
 
 "dump" {
 	add("DUMP", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
 	return DUMP;
 }
 "create" {
@@ -33,11 +34,13 @@ alpha [a-zA-Z]
 
 "all" {
 	add("STAR", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
 	return STAR;
 }
 
 "where" {
 	add("WHERE", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
 	return WHERE;
 }
 

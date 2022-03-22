@@ -34,14 +34,11 @@
 		file.seekg(0, std::ios::beg);
 		if(file.is_open())
 		{	
-			std::cout << "here\n";
 			while(getline(file, line))
 			{
 				row.clear();
-				std::cout << "here1\n";
 				std::stringstream str(line);
 				while(getline(str, word, ';')) {
-					std::cout << "here2\n";
 					row.push_back(word);
 				}
 				content.push_back(row);
@@ -52,14 +49,10 @@
 		}
 		for(int i=0;i<content.size();i++)
 		{
-			std::cout << content[i][0] << std::endl;
-			std::cout << content[i][1] << std::endl;
-			std::cout << content[i][2] << std::endl;
 			schema_meta_data[content[i][0]] = content[i][1];
 			index_meta_data[content[i][0]] = stoi(content[i][2]);
 		}
 		file.close();
-		std::cout << schema_meta_data["data"] << std::endl;
 		return 1;
 
 	}
@@ -72,6 +65,9 @@
 %token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX
 %token <name> NUM
 %token <name> NAME
+%token <name> DUMP
+%token <name> STAR
+%token <name> WHERE
 %token <name> FILE_NAME
 %type <condition> condition
 %type <colList> column_list
@@ -95,7 +91,7 @@ program : QUIT {
 	}
 	| DUMP STAR NAME{
 		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*$3];
+		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
 		if(ret < 0) {
@@ -106,7 +102,7 @@ program : QUIT {
 	}
 	| DUMP column_list NAME {
 		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*$3];
+		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
 		if(ret < 0) {
@@ -117,10 +113,9 @@ program : QUIT {
 	}
 	| DUMP STAR NAME WHERE condition {
 		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*$3];
+		std::string schemaTxt = schema_meta_data[*($3)];
 
 		Schema *schema = parseSchema(&schemaTxt[0]);
-		std::cout << schemaTxt << " " << *$3 + ".db" << std::endl;
 
 		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
 		if(ret < 0) {
@@ -133,10 +128,12 @@ program : QUIT {
 
 		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
 	}
-	| DUMP column_list NAME WHERE condition {
+	| DUMP STAR NAME WHERE condition {
 		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*$3];
+		std::string schemaTxt = schema_meta_data[*($3)];
+
 		Schema *schema = parseSchema(&schemaTxt[0]);
+
 		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
 		if(ret < 0) {
 			std::cout << "Result not available";
@@ -145,9 +142,9 @@ program : QUIT {
 		char *index_name_c = new char[index_name.length() + 1];
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
+
 		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
 	}
-
 // column_data_type_list : NAME
 
 column_list : NAME {
