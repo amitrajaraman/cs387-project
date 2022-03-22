@@ -6,12 +6,18 @@ SCAN = regex.l
 PARSE = parser.y
 CFLAGS = -g
 OBJS = scan.o parse.tab.o
-OBJ = tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a loaddb.o dumpdb.o
+OBJ = tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a
 
-all: $(TGT) loaddb
+all: loaddb $(TGT)
 
 $(TGT): $(OBJS) $(OBJ)
-	$(CPP) --std=c++0x $(OBJS) $(OBJ) -o $(TGT)
+	$(CPP) --std=c++0x $(OBJS) $(OBJ) dumpdb.o loaddb.o -o $(TGT)
+
+dumpdb : dumpdb.o $(OBJ) ../pflayer/pflayer.a ../amlayer/amlayer.a
+	$(CPP) -c $(CFLAGS) -o dumpdb dumpdb.o $(OBJ) 
+
+loaddb : loaddb.o $(OBJ)
+	$(CPP) -c $(CFLAGS) -o loaddb loaddb.o $(OBJ)
 
 loaddb.o : loaddb.c tbl.h codec.h util.h
 	$(CPP) -c $(CFLAGS) loaddb.c
