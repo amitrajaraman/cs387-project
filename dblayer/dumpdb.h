@@ -15,7 +15,7 @@
 
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
 
-void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<std::string> *colList);
+void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted);
 
 void index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value);
 #endif
