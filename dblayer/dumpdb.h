@@ -16,7 +16,7 @@ extern "C" {
 
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
 
-void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<std::string> *colList);
+void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted);
 
 #define DB_NAME "data.db"
 #define INDEX_NAME "data.db.0"
