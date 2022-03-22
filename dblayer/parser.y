@@ -50,7 +50,7 @@ program : QUIT {
 	| DUMP STAR WHERE condition_list
 	| DUMP column_list WHERE condition_list
 
-column_data_type_list : NAME
+// column_data_type_list : NAME
 
 column_list : NAME {
 		$$ = new std::vector<std::string>;
@@ -90,9 +90,6 @@ main(int argc, char **argv) {
 	yyset_in(stdin);
 	yyset_out(stdout);
 
-
-	Table_Open("data.db", schema, false, &tbl);   // Open the database and load table into memory
-	
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
 

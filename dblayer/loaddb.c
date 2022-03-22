@@ -55,27 +55,18 @@ encode(Schema *sch, char **fields, byte *record, int spaceLeft) {
 Schema *
 loadCSV(std::string file, int index) {
 	// Open csv file, parse schema
-	bool exists = false;
 	FILE* file_ptr;
 	std::string db_name = file.substr(0, file.length()-4) + ".db";
 	std::string index_name = file.substr(0, file.length()-4) + ".db.0";
 
-	char *db_name_c = new char[db_name.length() + 1];
-	strcpy(db_name_c, db_name.c_str());
-	// do stuff
-	char *index_name_c = new char[index_name.length() + 1];
-	strcpy(index_name_c, index_name.c_str());
-
-	if ((file_ptr = fopen(db_name_c, "r")))
+	file_ptr = fopen(&db_name[0], "r");
+	if (file_ptr)
     {
         fclose(file_ptr);
-        exists = true;
-		printf("The Table already exists\n");
+    	printf("The Table already exists\n");
 		return NULL;
     } 
-	else {
-		fclose(file_ptr);
-	}
+
 	FILE *fp = fopen(file.c_str() , "r");
 	if (!fp) {
 		perror("File could not be opened");
@@ -100,10 +91,10 @@ loadCSV(std::string file, int index) {
 	checkerr(err);
 	// Create an index for the population field
 
-	err = AM_CreateIndex(db_name_c, 0,'i', 4);
+	err = AM_CreateIndex(&db_name[0], 0,'i', 4);
 	checkerr(err);
 
-	int indexFD = PF_OpenFile(index_name_c);
+	int indexFD = PF_OpenFile(&index_name[0]);
 	// ----
 	tbl->indexFd = indexFD;
 	char *tokens[MAX_TOKENS];

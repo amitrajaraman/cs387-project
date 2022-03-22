@@ -107,22 +107,23 @@ alpha [a-zA-Z]
 	return NAME;
 }
 
-([^\/]+\/)*[^\/] {
+[\n] {
+	return -1;
+}
+
+{alpha}+\.{alpha}+ {
 	add(" ", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
 	return FILE_NAME;
 }
 
-
-[\n] {
-	return -1;
-}
-
 %%
+
 
 void add(std::string t, std::string l, int ln) {
 	token_table[counting].token_name = t;
 	token_table[counting].lexeme = l;
 	token_table[counting].lineno = ln;
+	// std::cout << t << " " << l << std::endl;
 	counting++;
 }
