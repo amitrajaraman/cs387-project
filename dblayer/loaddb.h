@@ -8,8 +8,10 @@
 #include "codec.h"
 #include "tbl.h"
 #include "util.h"
-#include "../pflayer/pf.h"
-#include "../amlayer/am.h"
+extern "C" {
+    #include "../pflayer/pf.h"
+    #include "../amlayer/am.h"
+}
 
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
 

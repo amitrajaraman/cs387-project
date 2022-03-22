@@ -4,7 +4,9 @@
 #include <iostream>
 #include "tbl.h"
 #include "codec.h"
-#include "../pflayer/pf.h"
+extern "C" {
+    #include "../pflayer/pf.h"
+}
 
 #define SLOT_COUNT_OFFSET 2
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(EXIT_FAILURE);}}
