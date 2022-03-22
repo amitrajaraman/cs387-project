@@ -2,9 +2,10 @@
 #define _LOADDB
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <assert.h>
 #include <ctype.h>
+#include <algorithm>
 #include "codec.h"
 #include "tbl.h"
 #include "util.h"

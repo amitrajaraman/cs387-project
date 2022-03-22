@@ -273,12 +273,14 @@ void
 printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList) {
 	std::vector<int> rowsToBePrinted;
 	if(colList != NULL) {
-		for (int i = 0; i < colList->size(); ++i)
-			for (int j = 0; j < tbl->schema->numColumns; ++j)
+		for (int i = 0; i < colList->size(); ++i) {
+			for (int j = 0; j < tbl->schema->numColumns; ++j) {
 				if(tbl->schema->columns[j]->name == (*colList)[i]) {
 					rowsToBePrinted.push_back(j);
 					break;
 				}
+			}
+		}
 	}
 	else {
 		for (int i = 0; i < tbl->schema->numColumns; ++i)

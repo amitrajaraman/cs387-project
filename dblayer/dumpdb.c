@@ -16,7 +16,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 	// Iterate through the columns
 	for (int i = 0; i < rowsToBePrinted.size(); ++i)
 	{
-		int x = schema->columns[i]->type;
+		int x = schema->columns[rowsToBePrinted[i]]->type;
 		if (x == 1) {
 			char tmp[999];
 			DecodeCString(cursor,tmp,999);
