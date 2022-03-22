@@ -42,23 +42,19 @@ AM_CreateIndex(
         }
 
     header = &head;
-
     /* Get the filename with extension and create a paged file by that name*/
     sprintf(indexfName,"%s.%d",fileName,indexNo);
     errVal = PF_CreateFile(indexfName);
     AM_Check;
-
     /* open the new file */
     fileDesc = PF_OpenFile(indexfName);
     if (fileDesc < 0) {
         AM_Errno = AME_PF;
         return(AME_PF);
     }
-
     /* allocate a new page for the root */
     errVal = PF_AllocPage(fileDesc,&pageNum,&pageBuf);
     AM_Check;
-
     /* initialise the header */
     header->pageType = 'l';
     header->nextLeafPage = AM_NULL_PAGE;
@@ -77,14 +73,12 @@ AM_CreateIndex(
     }
     /* copy the header onto the page */
     bcopy(header,pageBuf,AM_sl);
-
     errVal = PF_UnfixPage(fileDesc,pageNum,TRUE);
     AM_Check;
 
     /* Close the file */
     errVal = PF_CloseFile(fileDesc);
     AM_Check;
-
     /* initialise the root page and the leftmost page numbers */
     AM_RootPageNum = pageNum;
     return(AME_OK);

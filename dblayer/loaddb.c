@@ -1,26 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-#include "codec.h"
-#include "tbl.h"
-#include "util.h"
-extern "C" {
-	#include "../pflayer/pf.h"
-	#include "../amlayer/am.h"
-}
-
-#define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
-
-#define MAX_PAGE_SIZE 4000
-
-
-#define DB_NAME "data.db"
-#define INDEX_NAME "data.db.0"
-#define CSV_NAME "data.csv"
-
-
+#include "loaddb.h"
 /*
 Takes a schema, and an array of strings (fields), and uses the functionality
 in codec.c to convert strings into compact binary representations
@@ -75,18 +53,39 @@ encode(Schema *sch, char **fields, byte *record, int spaceLeft) {
 }
 
 Schema *
-loadCSV() {
+loadCSV(std::string file, int index) {
 	// Open csv file, parse schema
-	FILE *fp = fopen(CSV_NAME, "r");
+	bool exists = false;
+	FILE* file_ptr;
+	std::string db_name = file.substr(0, file.length()-4) + ".db";
+	std::string index_name = file.substr(0, file.length()-4) + ".db.0";
+
+	char *db_name_c = new char[db_name.length() + 1];
+	strcpy(db_name_c, db_name.c_str());
+	// do stuff
+	char *index_name_c = new char[index_name.length() + 1];
+	strcpy(index_name_c, index_name.c_str());
+
+	if ((file_ptr = fopen(db_name_c, "r")))
+    {
+        fclose(file_ptr);
+        exists = true;
+		printf("The Table already exists\n");
+		return NULL;
+    } 
+	else {
+		fclose(file_ptr);
+	}
+	FILE *fp = fopen(file.c_str() , "r");
 	if (!fp) {
-	perror("data.csv could not be opened");
+		perror("File could not be opened");
 		exit(EXIT_FAILURE);
 	}
 
 	char buf[MAX_LINE_LEN];
 	char *line = fgets(buf, MAX_LINE_LEN, fp);
 	if (line == NULL) {
-		fprintf(stderr, "Unable to read data.csv\n");
+		fprintf(stderr, "Unable to read file\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -96,16 +95,17 @@ loadCSV() {
 
 	// UNIMPLEMENTED;
 	// ----
-	int err = Table_Open(DB_NAME, sch, false, &tbl); 	// Create a file for storing the data...
+
+	int err = Table_Open(db_name, sch, false, &tbl); 	// Create a file for storing the data...
 	checkerr(err);
-	
 	// Create an index for the population field
-	err = AM_CreateIndex(DB_NAME, 0,'i', 4);
+
+	err = AM_CreateIndex(db_name_c, 0,'i', 4);
 	checkerr(err);
-	int indexFD = PF_OpenFile(INDEX_NAME);
 
+	int indexFD = PF_OpenFile(index_name_c);
 	// ----
-
+	tbl->indexFd = indexFD;
 	char *tokens[MAX_TOKENS];
 	char record[MAX_PAGE_SIZE];
 
@@ -120,16 +120,16 @@ loadCSV() {
 		// Implemented, need to check!
 		// ----
 		err = Table_Insert(tbl, record, len, &rid);	// Add the new data into the table
-			checkerr(err);
+		checkerr(err);
 		// ----
 
 		// Indexing on the population column 
-		int population = atoi(tokens[2]);
+		int index_value = atoi(tokens[index]);
 
 		// UNIMPLEMENTED;
 		// ----
-		err = AM_InsertEntry(indexFD, 'i', 4, (char*)&population, rid);	// Add the data into the index's data structure too 
-			checkerr(err);
+		err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
+		checkerr(err);
 		// ----
 	}
 
@@ -138,9 +138,4 @@ loadCSV() {
 	err = PF_CloseFile(indexFD);
 	checkerr(err);
 	return sch;
-}
-
-int
-main() {
-	loadCSV();
 }

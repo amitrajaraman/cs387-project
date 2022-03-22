@@ -1,3 +1,5 @@
+#ifndef _AM
+#define _AM
 typedef struct am_leafheader {
     char pageType;
     int nextLeafPage;
@@ -110,3 +112,5 @@ AM_FindNextEntry(int scanDesc/* index scan descriptor */);
 
 int
 AM_CloseIndexScan(int scanDesc /* scan Descriptor*/);
+
+#endif

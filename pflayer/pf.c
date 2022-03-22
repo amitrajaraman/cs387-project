@@ -229,14 +229,12 @@ PF_CreateFile(char *fname /* name of file to create */)
     int fd;	/* unix file descripotr */
     PFhdr_str hdr;	/* file header */
     int error;
-
     /* create file for exclusive use */
     if ((fd=open(fname,O_CREAT|O_EXCL|O_WRONLY,0664))<0) {
         /* unix error on open */
         PFerrno = PFE_UNIX;
         return(PFE_UNIX);
     }
-
     /* write out the file header */
     hdr.firstfree = PF_PAGE_LIST_END;	/* no free pag yet */
     hdr.numpages = 0;
@@ -251,12 +249,10 @@ PF_CreateFile(char *fname /* name of file to create */)
         unlink(fname);
         return(PFerrno);
     }
-
     if ((error=close(fd)) == -1) {
         PFerrno = PFE_UNIX;
         return(PFerrno);
     }
-
     return(PFE_OK);
 }
 

@@ -1,0 +1,345 @@
+Useless nonterminals
+
+   column_data_type_list
+
+
+Useless rules
+
+   17 column_data_type_list: NAME
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: QUIT
+    2        | HELP
+    3        | CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM
+    4        | DUMP STAR
+    5        | DUMP column_list
+    6        | DUMP STAR WHERE condition_list
+    7        | DUMP column_list WHERE condition_list
+
+    8 column_list: NAME
+    9            | column_list COMMA NAME
+
+   10 condition_list: condition
+
+   11 condition: EQ NUM
+   12          | LT NUM
+   13          | GT NUM
+   14          | LEQ NUM
+   15          | GEQ NUM
+   16          | NEQ NUM
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+DUMP (258) 4 5 6 7
+STAR (259) 4 6
+WHERE (260) 6 7
+QUIT (261) 1
+HELP (262) 2
+LT (263) 12
+GT (264) 13
+LEQ (265) 14
+GEQ (266) 15
+EQ (267) 11
+NEQ (268) 16
+COMMA (269) 9
+CREATE (270) 3
+TABLE (271) 3
+FILE_KEYWORD (272) 3
+INDEX (273) 3
+NUM (274) 3 11 12 13 14 15 16
+NAME (275) 8 9
+FILE_NAME (276) 3
+
+
+Nonterminals, with rules where they appear
+
+$accept (22)
+    on left: 0
+program (23)
+    on left: 1 2 3 4 5 6 7, on right: 0
+column_list (24)
+    on left: 8 9, on right: 5 7 9
+condition_list (25)
+    on left: 10, on right: 6 7
+condition (26)
+    on left: 11 12 13 14 15 16, on right: 10
+
+
+state 0
+
+    0 $accept: . program $end
+
+    DUMP    shift, and go to state 1
+    QUIT    shift, and go to state 2
+    HELP    shift, and go to state 3
+    CREATE  shift, and go to state 4
+
+    program  go to state 5
+
+
+state 1
+
+    4 program: DUMP . STAR
+    5        | DUMP . column_list
+    6        | DUMP . STAR WHERE condition_list
+    7        | DUMP . column_list WHERE condition_list
+
+    STAR  shift, and go to state 6
+    NAME  shift, and go to state 7
+
+    column_list  go to state 8
+
+
+state 2
+
+    1 program: QUIT .
+
+    $default  reduce using rule 1 (program)
+
+
+state 3
+
+    2 program: HELP .
+
+    $default  reduce using rule 2 (program)
+
+
+state 4
+
+    3 program: CREATE . TABLE FILE_KEYWORD FILE_NAME INDEX NUM
+
+    TABLE  shift, and go to state 9
+
+
+state 5
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 10
+
+
+state 6
+
+    4 program: DUMP STAR .
+    6        | DUMP STAR . WHERE condition_list
+
+    WHERE  shift, and go to state 11
+
+    $default  reduce using rule 4 (program)
+
+
+state 7
+
+    8 column_list: NAME .
+
+    $default  reduce using rule 8 (column_list)
+
+
+state 8
+
+    5 program: DUMP column_list .
+    7        | DUMP column_list . WHERE condition_list
+    9 column_list: column_list . COMMA NAME
+
+    WHERE  shift, and go to state 12
+    COMMA  shift, and go to state 13
+
+    $default  reduce using rule 5 (program)
+
+
+state 9
+
+    3 program: CREATE TABLE . FILE_KEYWORD FILE_NAME INDEX NUM
+
+    FILE_KEYWORD  shift, and go to state 14
+
+
+state 10
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+state 11
+
+    6 program: DUMP STAR WHERE . condition_list
+
+    LT   shift, and go to state 15
+    GT   shift, and go to state 16
+    LEQ  shift, and go to state 17
+    GEQ  shift, and go to state 18
+    EQ   shift, and go to state 19
+    NEQ  shift, and go to state 20
+
+    condition_list  go to state 21
+    condition       go to state 22
+
+
+state 12
+
+    7 program: DUMP column_list WHERE . condition_list
+
+    LT   shift, and go to state 15
+    GT   shift, and go to state 16
+    LEQ  shift, and go to state 17
+    GEQ  shift, and go to state 18
+    EQ   shift, and go to state 19
+    NEQ  shift, and go to state 20
+
+    condition_list  go to state 23
+    condition       go to state 22
+
+
+state 13
+
+    9 column_list: column_list COMMA . NAME
+
+    NAME  shift, and go to state 24
+
+
+state 14
+
+    3 program: CREATE TABLE FILE_KEYWORD . FILE_NAME INDEX NUM
+
+    FILE_NAME  shift, and go to state 25
+
+
+state 15
+
+   12 condition: LT . NUM
+
+    NUM  shift, and go to state 26
+
+
+state 16
+
+   13 condition: GT . NUM
+
+    NUM  shift, and go to state 27
+
+
+state 17
+
+   14 condition: LEQ . NUM
+
+    NUM  shift, and go to state 28
+
+
+state 18
+
+   15 condition: GEQ . NUM
+
+    NUM  shift, and go to state 29
+
+
+state 19
+
+   11 condition: EQ . NUM
+
+    NUM  shift, and go to state 30
+
+
+state 20
+
+   16 condition: NEQ . NUM
+
+    NUM  shift, and go to state 31
+
+
+state 21
+
+    6 program: DUMP STAR WHERE condition_list .
+
+    $default  reduce using rule 6 (program)
+
+
+state 22
+
+   10 condition_list: condition .
+
+    $default  reduce using rule 10 (condition_list)
+
+
+state 23
+
+    7 program: DUMP column_list WHERE condition_list .
+
+    $default  reduce using rule 7 (program)
+
+
+state 24
+
+    9 column_list: column_list COMMA NAME .
+
+    $default  reduce using rule 9 (column_list)
+
+
+state 25
+
+    3 program: CREATE TABLE FILE_KEYWORD FILE_NAME . INDEX NUM
+
+    INDEX  shift, and go to state 32
+
+
+state 26
+
+   12 condition: LT NUM .
+
+    $default  reduce using rule 12 (condition)
+
+
+state 27
+
+   13 condition: GT NUM .
+
+    $default  reduce using rule 13 (condition)
+
+
+state 28
+
+   14 condition: LEQ NUM .
+
+    $default  reduce using rule 14 (condition)
+
+
+state 29
+
+   15 condition: GEQ NUM .
+
+    $default  reduce using rule 15 (condition)
+
+
+state 30
+
+   11 condition: EQ NUM .
+
+    $default  reduce using rule 11 (condition)
+
+
+state 31
+
+   16 condition: NEQ NUM .
+
+    $default  reduce using rule 16 (condition)
+
+
+state 32
+
+    3 program: CREATE TABLE FILE_KEYWORD FILE_NAME INDEX . NUM
+
+    NUM  shift, and go to state 33
+
+
+state 33
+
+    3 program: CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM .
+
+    $default  reduce using rule 3 (program)

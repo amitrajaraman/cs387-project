@@ -1,14 +1,11 @@
 %{
 	// #include <vector>
-	#include "dumpdb.c"
-
-	#define DB_NAME "data.db"
-	#define INDEX_NAME "data.db.0"
+	#include "dumpdb.h"
+	#include "loaddb.h"
 
 	std::string schemaTxt = "Country:varchar,Capital:varchar,Population:int";
 	Schema *schema = parseSchema(&schemaTxt[0]);
 	Table *tbl;
-	int indexFD;
 
 	int yylex();
 	int yyerror(std::string);
@@ -27,9 +24,10 @@
 	std::string *name;
 	std::vector<std::string> *colList;
 }
-%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX
 %token <name> NUM
-%token <name> COLUMN
+%token <name> NAME
+%token <name> FILE_NAME
 
 %type <colList> column_list
 
@@ -40,6 +38,9 @@ program : QUIT {
 	}
 	| HELP {
 		std::cout << "Type 'dump all' to dump all data, 'dump all where [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
+	}
+	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
+		loadCSV(*$4, stoi(*$6));
 	}
 	| DUMP STAR {
 		printAllRows(tbl, schema, printRow, NULL);
@@ -52,11 +53,13 @@ program : QUIT {
 
 	}
 
-column_list : COLUMN {
+column_data_type_list : NAME
+
+column_list : NAME {
 		$$ = new std::vector<std::string>;
 		$$->push_back(*($1));
 	}
-	| column_list COMMA COLUMN {
+	| column_list COMMA NAME {
 		$$ = $1;
 		$$->push_back(*($3));
 	}
@@ -64,22 +67,22 @@ column_list : COLUMN {
 condition_list : condition
 
 condition : EQ NUM {
-		index_scan(tbl, schema, indexFD, 1, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 1, stoi(*($2)));
 	}
 	| LT NUM {
-		index_scan(tbl, schema, indexFD, 2, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 2, stoi(*($2)));
 	}
 	| GT NUM {
-		index_scan(tbl, schema, indexFD, 3, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 3, stoi(*($2)));
 	}
 	| LEQ NUM {
-		index_scan(tbl, schema, indexFD, 4, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 4, stoi(*($2)));
 	}
 	| GEQ NUM {
-		index_scan(tbl, schema, indexFD, 5, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 5, stoi(*($2)));
 	}
 	| NEQ NUM {
-		index_scan(tbl, schema, indexFD, 6, stoi(*($2)));
+		index_scan(tbl, schema, tbl->indexFd, 6, stoi(*($2)));
 	}
 
 %% 
@@ -93,7 +96,6 @@ main(int argc, char **argv) {
 
 	Table_Open(DB_NAME, schema, false, &tbl);   // Open the database and load table into memory
 	
-	indexFD = PF_OpenFile(INDEX_NAME);
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
 
