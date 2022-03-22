@@ -6,7 +6,7 @@ SCAN = regex.l
 PARSE = parser.y
 CFLAGS = -g
 OBJS = scan.o parse.tab.o
-OBJ = tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a
+OBJ = tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a loaddb.o
 
 all: $(TGT) loaddb
 
@@ -50,4 +50,4 @@ parse.tab.c parse.tab.h: dumpdb.o $(PARSE)
 	$(BISON) -b parse -dv $(PARSE)
 
 clean:
-	rm  -f $(TGT) *.tab.c *.tab.h scan.c *.output *.o *.a a.out* *~ data.db* *db
+	rm  -f $(TGT) *.tab.c *.tab.h scan.c *.output *.o *.a a.out* *~ *.db* *db

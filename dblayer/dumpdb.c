@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
-#include <algorithm>
-#include <cstring>
-#include "codec.h"
-#include "tbl.h"
-#include "util.h"
+#include "dumpdb.h"
 
 extern "C" {
 	#include "../pflayer/pf.h"
@@ -50,9 +43,6 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			std::cout << ",";
 	}
 }
-
-#define DB_NAME "data.db"
-#define INDEX_NAME "data.db.0"
 	 
 void
 index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value) {

@@ -24,7 +24,8 @@ typedef struct {
 typedef struct {
     // UNIMPLEMENTED; 
     Schema *schema;
-    int fd;    
+    int fd;
+    int indexFd;
 } Table ;
 
 typedef int RecId;
