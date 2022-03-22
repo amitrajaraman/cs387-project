@@ -15,11 +15,14 @@
 		std::string lexeme;
 		int lineno;
 	};
+
 	extern struct tokens token_table[1000];
 	std::map<std::string, std::string> schema_meta_data;
 	std::map<std::string, int> index_meta_data;
 
 	int load_meta_data() {
+		schema_meta_data.clear();
+		index_meta_data.clear();
 		std::vector<std::vector<std::string>> content;
 		std::vector<std::string> row;
 		std::string line, word;
@@ -31,13 +34,15 @@
 		file.seekg(0, std::ios::beg);
 		if(file.is_open())
 		{	
+			std::cout << "here\n";
 			while(getline(file, line))
 			{
 				row.clear();
+				std::cout << "here1\n";
 				std::stringstream str(line);
 				while(getline(str, word, ';')) {
+					std::cout << "here2\n";
 					row.push_back(word);
-					std::cout << word << std::endl;
 				}
 				content.push_back(row);
 			}
@@ -47,23 +52,28 @@
 		}
 		for(int i=0;i<content.size();i++)
 		{
-
+			std::cout << content[i][0] << std::endl;
+			std::cout << content[i][1] << std::endl;
+			std::cout << content[i][2] << std::endl;
 			schema_meta_data[content[i][0]] = content[i][1];
 			index_meta_data[content[i][0]] = stoi(content[i][2]);
 		}
 		file.close();
+		std::cout << schema_meta_data["data"] << std::endl;
 		return 1;
+
 	}
 %}
 %union {
 	std::string *name;
 	std::vector<std::string> *colList;
+	Condition *condition;
 }
 %token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX
 %token <name> NUM
 %token <name> NAME
 %token <name> FILE_NAME
-
+%type <condition> condition
 %type <colList> column_list
 
 %%
@@ -81,7 +91,7 @@ program : QUIT {
 		std::string s = *$4;
 		s = s.substr(0, s.length()-4);
 		outfile << s + ";" + schemaTxt + ";" + *$6; 
-		std::cout << "Created database!\n";
+		std::cout << "Created table!\n";
 	}
 	| DUMP STAR NAME{
 		load_meta_data();
@@ -105,8 +115,38 @@ program : QUIT {
 		printAllRows(tbl, schema, printRow, $2);
 		Table_Close(tbl);
 	}
-	| DUMP STAR NAME WHERE condition_list
-	| DUMP column_list NAME WHERE condition_list
+	| DUMP STAR NAME WHERE condition {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*$3];
+
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		std::cout << schemaTxt << " " << *$3 + ".db" << std::endl;
+
+		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		std::string index_name = *$3 + ".db.0";
+		char *index_name_c = new char[index_name.length() + 1];
+		strcpy(index_name_c, index_name.c_str());
+		int indexFD = PF_OpenFile(index_name_c);
+
+		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
+	}
+	| DUMP column_list NAME WHERE condition {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*$3];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		std::string index_name = *$3 + ".db.0";
+		char *index_name_c = new char[index_name.length() + 1];
+		strcpy(index_name_c, index_name.c_str());
+		int indexFD = PF_OpenFile(index_name_c);
+		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
+	}
 
 // column_data_type_list : NAME
 
@@ -119,25 +159,30 @@ column_list : NAME {
 		$$->push_back(*($3));
 	}
 
-condition_list : condition
 
 condition : EQ NUM {
-		index_scan(tbl, schema, tbl->indexFd, 1, stoi(*($2)));
+		$$->op = new int(1);
+		$$->num = new int(stoi(*$2));
 	}
 	| LT NUM {
-		index_scan(tbl, schema, tbl->indexFd, 2, stoi(*($2)));
+		$$->op = new int(2);
+		$$->num = new int(stoi(*$2));
 	}
 	| GT NUM {
-		index_scan(tbl, schema, tbl->indexFd, 3, stoi(*($2)));
+		$$->op = new int(3);
+		$$->num = new int(stoi(*$2));
 	}
 	| LEQ NUM {
-		index_scan(tbl, schema, tbl->indexFd, 4, stoi(*($2)));
+		$$->op = new int(4);
+		$$->num = new int(stoi(*$2));
 	}
 	| GEQ NUM {
-		index_scan(tbl, schema, tbl->indexFd, 5, stoi(*($2)));
+		$$->op = new int(5);
+		$$->num = new int(stoi(*$2));
 	}
 	| NEQ NUM {
-		index_scan(tbl, schema, tbl->indexFd, 6, stoi(*($2)));
+		$$->op = new int(6);
+		$$->num = new int(stoi(*$2));
 	}
 
 %% 

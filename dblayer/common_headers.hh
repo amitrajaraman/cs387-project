@@ -8,5 +8,8 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-
+struct Condition {
+    int* op;
+    int* num;
+};
 #endif
