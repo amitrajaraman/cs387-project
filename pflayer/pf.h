@@ -1,4 +1,6 @@
 /* pf.h: externs and error codes for Paged File Interface*/
+#ifndef _PF
+#define _PF
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -193,3 +195,4 @@ int PF_UnfixPage(int fd,	/* file descriptor */
                  int pagenum,	/* page number */
                  int dirty	/* true if file is dirty */
                 );
+#endif

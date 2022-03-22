@@ -1,3 +1,5 @@
+#ifndef _TBL_H
+#define _TBL_H
 #include <iostream>
 
 #define MAX_TOKENS 100
@@ -9,3 +11,4 @@ char *trim(char *str);
 int split(char *buf, std::string delim, char **tokens);
 
 Schema *parseSchema(char* buf);
+#endif

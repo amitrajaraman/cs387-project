@@ -1,7 +1,5 @@
 %{
-	#include <string>
-	#include <iostream>
-	#include <vector>
+	#include "common_headers.hh"
 	#include "parse.tab.h"
 	struct tokens {
 		std::string token_name;

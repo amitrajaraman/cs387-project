@@ -1,7 +1,5 @@
 %{
-	// #include <vector>
-	#include "dumpdb.h"
-	#include "loaddb.h"
+	#include "common_headers.hh"
 
 	std::string schemaTxt = "Country:varchar,Capital:varchar,Population:int";
 	Schema *schema = parseSchema(&schemaTxt[0]);
@@ -94,7 +92,7 @@ main(int argc, char **argv) {
 	yyset_out(stdout);
 
 
-	Table_Open(DB_NAME, schema, false, &tbl);   // Open the database and load table into memory
+	Table_Open("data.db", schema, false, &tbl);   // Open the database and load table into memory
 	
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
