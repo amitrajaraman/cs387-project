@@ -39,6 +39,7 @@ program : QUIT {
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		loadCSV(*$4, stoi(*$6));
+		std::cout << "Created database!\n";
 	}
 	| DUMP STAR {
 		printAllRows(tbl, schema, printRow, NULL);
@@ -47,9 +48,7 @@ program : QUIT {
 		printAllRows(tbl, schema, printRow, $2);
 	}
 	| DUMP STAR WHERE condition_list
-	| DUMP column_list WHERE condition_list {
-
-	}
+	| DUMP column_list WHERE condition_list
 
 column_data_type_list : NAME
 

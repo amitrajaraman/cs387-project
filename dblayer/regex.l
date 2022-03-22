@@ -107,8 +107,8 @@ alpha [a-zA-Z]
 	return NAME;
 }
 
-(.+)\/([^\/]+) {
-	add("FILE_NAME", std::string(yytext), yylineno);
+([^\/]+\/)*[^\/] {
+	add(" ", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
 	return FILE_NAME;
 }
