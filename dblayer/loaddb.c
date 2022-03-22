@@ -52,7 +52,7 @@ encode(Schema *sch, char **fields, byte *record, int spaceLeft) {
 
 }
 
-Schema *
+std::string
 loadCSV(std::string file, int index) {
 	// Open csv file, parse schema
 	bool exists = false;
@@ -90,6 +90,7 @@ loadCSV(std::string file, int index) {
 	}
 
 	// Open main db file
+	std::string schemaTxt = std::string(line);
 	Schema *sch = parseSchema(line);
 	Table *tbl;
 
@@ -137,5 +138,6 @@ loadCSV(std::string file, int index) {
 	Table_Close(tbl);
 	err = PF_CloseFile(indexFD);
 	checkerr(err);
-	return sch;
+	schemaTxt.erase(std::remove(schemaTxt.begin(), schemaTxt.end(), '\n'), schemaTxt.end());
+	return schemaTxt;
 }

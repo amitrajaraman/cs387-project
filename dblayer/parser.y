@@ -1,8 +1,6 @@
 %{
 	#include "common_headers.hh"
 
-	std::string schemaTxt = "Country:varchar,Capital:varchar,Population:int";
-	Schema *schema = parseSchema(&schemaTxt[0]);
 	Table *tbl;
 
 	int yylex();
@@ -11,12 +9,51 @@
 	void yyset_out (FILE * _out_str);
 	extern int counting;
 	int stopFlag = 0;
+	Schema* schema;
 	struct tokens {
 		std::string token_name;
 		std::string lexeme;
 		int lineno;
 	};
 	extern struct tokens token_table[1000];
+	std::map<std::string, std::string> schema_meta_data;
+	std::map<std::string, int> index_meta_data;
+
+	int load_meta_data() {
+		std::vector<std::vector<std::string>> content;
+		std::vector<std::string> row;
+		std::string line, word;
+	
+		std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
+		file2.close();
+		std::fstream file ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::ate );
+
+		file.seekg(0, std::ios::beg);
+		if(file.is_open())
+		{	
+			while(getline(file, line))
+			{
+				row.clear();
+				std::stringstream str(line);
+				while(getline(str, word, ';')) {
+					row.push_back(word);
+					std::cout << word << std::endl;
+				}
+				content.push_back(row);
+			}
+		} 
+		else {
+			std::cout << "Error Occured\n";
+		}
+		for(int i=0;i<content.size();i++)
+		{
+
+			schema_meta_data[content[i][0]] = content[i][1];
+			index_meta_data[content[i][0]] = stoi(content[i][2]);
+		}
+		file.close();
+		return 1;
+	}
 %}
 %union {
 	std::string *name;
@@ -38,17 +75,38 @@ program : QUIT {
 		std::cout << "Type 'dump all' to dump all data, 'dump all where [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
-		loadCSV(*$4, stoi(*$6));
+		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
+		std::ofstream outfile;
+		outfile.open("meta_data.db", std::ios_base::app);
+		std::string s = *$4;
+		s = s.substr(0, s.length()-4);
+		outfile << s + ";" + schemaTxt + ";" + *$6; 
 		std::cout << "Created database!\n";
 	}
-	| DUMP STAR {
+	| DUMP STAR NAME{
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*$3];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
 		printAllRows(tbl, schema, printRow, NULL);
+		Table_Close(tbl);
 	}
-	| DUMP column_list {
+	| DUMP column_list NAME {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*$3];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
 		printAllRows(tbl, schema, printRow, $2);
+		Table_Close(tbl);
 	}
-	| DUMP STAR WHERE condition_list
-	| DUMP column_list WHERE condition_list
+	| DUMP STAR NAME WHERE condition_list
+	| DUMP column_list NAME WHERE condition_list
 
 column_data_type_list : NAME
 
@@ -88,17 +146,15 @@ int
 main(int argc, char **argv) {
 
 	yyset_in(stdin);
-	yyset_out(stdout);
-
-
-	Table_Open("data.db", schema, false, &tbl);   // Open the database and load table into memory
-	
+	yyset_out(stdout);	
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
 
+	// Schema and index meta data is in file meta_data.db
+	load_meta_data();
 	std::string input;
 	while(true) {
-		std::cout << std::endl;
+		std::cout << std::endl << ">";
 		yyparse();
 		if(stopFlag)
 			break;	

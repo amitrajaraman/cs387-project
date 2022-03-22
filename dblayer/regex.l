@@ -106,17 +106,16 @@ alpha [a-zA-Z]
 	yylval.name = new std::string(yytext);
 	return NAME;
 }
+[\n] {
+	return -1;
+}
 
-([^\/]+\/)*[^\/] {
-	add(" ", std::string(yytext), yylineno);
+{alpha}+\.{alpha}+ {
+	add("FILE_NAME", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
 	return FILE_NAME;
 }
 
-
-[\n] {
-	return -1;
-}
 
 %%
 
