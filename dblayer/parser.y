@@ -62,7 +62,7 @@
 	std::vector<std::string> *colList;
 	Condition *condition;
 }
-%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX GIT
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX GIT INSERT INTO LEFT_PAR RIGHT_PAR SEMICOLON
 %token <name> NUM
 %token <name> NAME
 // %token <name> DUMP
@@ -70,12 +70,14 @@
 // %token <name> WHERE
 // working without these now for some reason, not sure why
 %token <name> FILE_NAME
+%type <name> row
 %type <condition> condition
 %type <colList> column_list
 
 %%
 
-program : QUIT {
+program
+	: QUIT {
 		stopFlag = 1;
 	}
 	| HELP {
@@ -156,9 +158,40 @@ program : QUIT {
 
 		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), $2);
 	}
-// column_data_type_list : NAME
+	| INSERT LEFT_PAR row RIGHT_PAR INTO NAME {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*($6)];
+		Schema *schema = parseSchema(&schemaTxt[0]);
 
-column_list : NAME {
+		int ret = Table_Open(*$6 + ".db", schema, false, &tbl);
+		if(ret < 0)
+			std::cout << "Result not available";
+		std::string index_name = *$6 + ".db.0";
+
+		if(insertRow(tbl, schema, *$6, *($3), index_meta_data[*$6]) != 0)
+			std::cout << "Invalid insert of row!" << std::endl;
+		else
+			std::cout << "Inserted successfully!" << std::endl;
+	}
+
+row
+	: row SEMICOLON NAME {
+		$$ = $1;
+		*($$) = *($$) + ";" + *($3);
+	}
+	| row SEMICOLON NUM {
+		$$ = $1;
+		*($$) = *($$) + ";" + *($3); 
+	}
+	| NAME {
+		$$ = new std::string(*($1));
+	}
+	| NUM {
+		$$ = new std::string(*($1));
+	}
+
+column_list
+	: NAME {
 		$$ = new std::vector<std::string>;
 		$$->push_back(*($1));
 	}
@@ -168,7 +201,8 @@ column_list : NAME {
 	}
 
 
-condition : EQ NUM {
+condition
+	: EQ NUM {
 		$$->op = new int(1);
 		$$->num = new int(stoi(*$2));
 	}

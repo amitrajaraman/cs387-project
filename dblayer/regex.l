@@ -16,12 +16,6 @@ alpha [a-zA-Z]
 
 %%
 
-{digit}+ {
-	add("NUM", std::string(yytext), yylineno);
-	yylval.name = new std::string(yytext);
-	return NUM;
-}
-
 "dump" {
 	add("DUMP", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
@@ -109,10 +103,42 @@ alpha [a-zA-Z]
 	return GIT;
 }
 
+"insert" {
+	add("INSERT", std::string(yytext), yylineno);
+	return INSERT;
+}
+
+"into" {
+	add("INTO", std::string(yytext), yylineno);
+	return INTO;
+}
+
+"(" {
+	add("LEFT_PAR", std::string(yytext), yylineno);
+	return LEFT_PAR;
+}
+
+")" {
+	add("RIGHT_PAR", std::string(yytext), yylineno);
+	return RIGHT_PAR;
+}
+
+";" {
+	add("SEMICOLON", std::string(yytext), yylineno);
+	return SEMICOLON;
+}
+
+
 {alpha}({alpha}|{digit})* {
 	add("NAME", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
 	return NAME;
+}
+
+{digit}+ {
+	add("NUM", std::string(yytext), yylineno);
+	yylval.name = new std::string(yytext);
+	return NUM;
 }
 
 [\n] {

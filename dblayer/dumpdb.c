@@ -46,8 +46,6 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 	 
 void
 index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList) {
-	// UNIMPLEMENTED;
-	// ----
 	/*
 	Open index ...
 	while (true) {
@@ -57,7 +55,7 @@ index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vect
 	}
 	close index ...
 	*/
-	int scan_desc = AM_OpenIndexScan(indexFD, 'i', 4, op, (char*)&value); // Hardcoded population as index; not good imo
+	int scan_desc = AM_OpenIndexScan(indexFD, 'i', 4, op, (char*)&value);
 	
 	std::vector<int> rowsToBePrinted;
 	

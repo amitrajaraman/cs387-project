@@ -19,4 +19,5 @@ extern "C" {
 #define MAX_PAGE_SIZE 4000
 int encode(Schema *sch, char **fields, byte *record, int spaceLeft);
 std::string loadCSV(std::string file, int index);
+int insertRow(Table *tbl, Schema *sch, std::string indexName, std::string row, int indexNo);
 #endif

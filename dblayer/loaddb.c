@@ -85,7 +85,6 @@ loadCSV(std::string file, int index) {
 	Schema *sch = parseSchema(line);
 	Table *tbl;
 
-	// UNIMPLEMENTED;
 	// ----
 
 	int err = Table_Open(db_name, sch, false, &tbl); 	// Create a file for storing the data...
@@ -101,15 +100,17 @@ loadCSV(std::string file, int index) {
 	char *tokens[MAX_TOKENS];
 	char record[MAX_PAGE_SIZE];
 
+
 	while ((line = fgets(buf, MAX_LINE_LEN, fp)) != NULL) {
 		int n = split(line, ",", tokens);
-		assert (n == sch->numColumns);
+		if (n != sch->numColumns) {
+			std::cout << "Invalid insert of row " << line << std::endl;
+			continue;
+		}
 		int len = encode(sch, tokens, record, sizeof(record));
 		
 		RecId rid;
 
-		// UNIMPLEMENTED;
-		// Implemented, need to check!
 		// ----
 		err = Table_Insert(tbl, record, len, &rid);	// Add the new data into the table
 		checkerr(err);
@@ -118,7 +119,6 @@ loadCSV(std::string file, int index) {
 		// Indexing on the population column 
 		int index_value = atoi(tokens[index]);
 
-		// UNIMPLEMENTED;
 		// ----
 		err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
 		checkerr(err);
@@ -131,4 +131,77 @@ loadCSV(std::string file, int index) {
 	checkerr(err);
 	schemaTxt.erase(std::remove(schemaTxt.begin(), schemaTxt.end(), '\n'), schemaTxt.end());
 	return schemaTxt;
+}
+
+
+int
+insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index) {
+	
+	std::string index_name = name + ".db.0";
+	
+	// Create an index for the population field
+	int indexFD = PF_OpenFile(&index_name[0]);
+
+	char *tokens[MAX_TOKENS];
+	char record[MAX_PAGE_SIZE];
+
+	int n = split(&row[0], ";", tokens);
+	
+	if (n != sch->numColumns)
+		return 1;
+	int len = encode(sch, tokens, record, sizeof(record));
+	
+	RecId rid;
+
+	// ----
+	int err = Table_Insert(tbl, record, len, &rid);	// Add the new data into the table
+	checkerr(err);
+	// ----
+
+	// Indexing on the population column 
+	int index_value = atoi(tokens[index]);
+
+	// ----
+	err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
+	checkerr(err);
+	// ----
+	
+	Table_Close(tbl);
+	err = PF_CloseFile(indexFD);
+	checkerr(err);
+
+	return 0;
+
+
+	// int indexFD = PF_OpenFile(&index_name[0]);
+
+	// char record[MAX_PAGE_SIZE];
+	// char* tokens[MAX_TOKENS];
+
+	// int n = split(&row[0], ";", tokens);
+	// if (n != sch->numColumns)
+	// 	return 1;
+	// int len = encode(sch, tokens, record, sizeof(record));
+
+	// RecId rid;
+
+	// // ----
+
+	// int err = Table_Insert(tbl, record, len, &rid);	// Add the new data into the table
+	// checkerr(err);
+	// // ----
+
+	
+	// // Indexing on the population column 
+	// int index_value = atoi(tokens[indexNo]);
+
+	// for (int i = 0; i < sch->numColumns; ++i)
+	// 	std::cout << tokens[i] << " ";
+	// std::cout << std::endl << index_value << std::endl;
+
+	// // ----
+	// err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
+	// checkerr(err);
+	// // ----
+	// return 0;
 }
