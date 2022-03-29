@@ -45,7 +45,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 }
 	 
 void
-index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value) {
+index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList) {
 	// UNIMPLEMENTED;
 	// ----
 	/*
@@ -60,8 +60,21 @@ index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value) {
 	int scan_desc = AM_OpenIndexScan(indexFD, 'i', 4, op, (char*)&value); // Hardcoded population as index; not good imo
 	
 	std::vector<int> rowsToBePrinted;
-	for (int i = 0; i < schema->numColumns; ++i)
+	
+	if(colList != NULL) {
+		for (int i = 0; i < colList->size(); ++i) {
+			for (int j = 0; j < tbl->schema->numColumns; ++j) {
+				if(tbl->schema->columns[j]->name == (*colList)[i]) {
+					rowsToBePrinted.push_back(j);
+					break;
+				}
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < tbl->schema->numColumns; ++i)
 			rowsToBePrinted.push_back(i);
+	}
 
 	while(true){
 		int next_rid = AM_FindNextEntry(scan_desc);         // Get the next entry...

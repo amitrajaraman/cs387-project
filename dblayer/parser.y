@@ -65,9 +65,10 @@
 %token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX
 %token <name> NUM
 %token <name> NAME
-%token <name> DUMP
-%token <name> STAR
-%token <name> WHERE
+// %token <name> DUMP
+// %token <name> STAR
+// %token <name> WHERE
+// working without these now for some reason, not sure why
 %token <name> FILE_NAME
 %type <condition> condition
 %type <colList> column_list
@@ -78,7 +79,14 @@ program : QUIT {
 		stopFlag = 1;
 	}
 	| HELP {
-		std::cout << "Type 'dump all' to dump all data, 'dump all where [eq/lt/gt/leq/geq/neq] num' to print all rows with population satisfying the given constraint, and 'quit' to quit." << std::endl;
+		std::cout << "Implemented commands:\n"
+				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
+				"'dump all <table_name>' to dump all data in the specified table\n"
+				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
+				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
+				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
+				"'help' for help :)\n"
+				"'quit' to quit.\n" << std::endl;
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
@@ -89,7 +97,7 @@ program : QUIT {
 		outfile << s + ";" + schemaTxt + ";" + *$6; 
 		std::cout << "Created table!\n";
 	}
-	| DUMP STAR NAME{
+	| DUMP STAR NAME {
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -126,9 +134,9 @@ program : QUIT {
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
+		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), NULL);
 	}
-	| DUMP STAR NAME WHERE condition {
+	| DUMP column_list NAME WHERE condition {
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 
@@ -143,7 +151,7 @@ program : QUIT {
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, *($5->op), *($5->num));
+		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), $2);
 	}
 // column_data_type_list : NAME
 

@@ -109,6 +109,7 @@ alpha [a-zA-Z]
 	yylval.name = new std::string(yytext);
 	return NAME;
 }
+
 [\n] {
 	return -1;
 }

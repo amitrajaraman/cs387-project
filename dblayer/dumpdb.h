@@ -19,5 +19,5 @@ extern "C" {
 
 void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted);
 
-void index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value);
+void index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList);
 #endif

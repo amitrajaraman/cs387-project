@@ -1,0 +1,11 @@
+*.tab.c
+*.tab.h
+scan.c
+*.output
+*.o
+*.a
+a.out*
+*~
+*.db*
+*db
+interface
