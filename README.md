@@ -1,6 +1,6 @@
 # Transaction Management
 
-This is the Git repository which hosts the code for our CS387 project, that deals with transaction management. 
+This is the Git repository which hosts the code for our CS387 project that deals with transaction management. 
 The team consists of four members:
 1. Amit Rajaraman - 190050015
 2. Aman Yadav - 190050013
