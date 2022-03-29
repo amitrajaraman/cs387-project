@@ -1,7 +1,7 @@
 %{
 	#include "common_headers.hh"
 
-	Table *tbl;
+	Table *tbl = NULL;
 
 	int yylex();
 	int yyerror(std::string);
@@ -62,7 +62,7 @@
 	std::vector<std::string> *colList;
 	Condition *condition;
 }
-%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX GIT
 %token <name> NUM
 %token <name> NAME
 // %token <name> DUMP
@@ -89,7 +89,7 @@ program : QUIT {
 				"'quit' to quit.\n" << std::endl;
 	}
 	| GIT {
-		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!"
+		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!";
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
@@ -213,7 +213,8 @@ main(int argc, char **argv) {
 		if(stopFlag)
 			break;	
 	}
-	Table_Close(tbl);
+	if(tbl)
+		Table_Close(tbl);
 }
 
 int yyerror(std::string msg) {
