@@ -88,6 +88,9 @@ program : QUIT {
 				"'help' for help :)\n"
 				"'quit' to quit.\n" << std::endl;
 	}
+	| GIT {
+		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!"
+	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
 		std::ofstream outfile;

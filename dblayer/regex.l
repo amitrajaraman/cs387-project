@@ -104,6 +104,11 @@ alpha [a-zA-Z]
 	return COMMA;
 }
 
+"git"|"github" {
+	add("GIT", std::string(yytext), yylineno);
+	return GIT;
+}
+
 {alpha}({alpha}|{digit})* {
 	add("NAME", std::string(yytext), yylineno);
 	yylval.name = new std::string(yytext);
