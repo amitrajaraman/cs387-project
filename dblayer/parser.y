@@ -88,10 +88,11 @@ program
 				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
 				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
 				"'help' for help :)\n"
-				"'quit' to quit.\n" << std::endl;
+				"'git' to show the git repository of this project.\n"
+				"'quit' to quit." << std::endl;
 	}
 	| GIT {
-		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!";
+		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!" << std::endl;
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
@@ -173,6 +174,7 @@ program
 		else
 			std::cout << "Inserted successfully!" << std::endl;
 	}
+	| error 
 
 row
 	: row SEMICOLON NAME {
@@ -189,6 +191,7 @@ row
 	| NUM {
 		$$ = new std::string(*($1));
 	}
+	| error
 
 column_list
 	: NAME {
@@ -199,6 +202,7 @@ column_list
 		$$ = $1;
 		$$->push_back(*($3));
 	}
+	| error
 
 
 condition
@@ -226,6 +230,7 @@ condition
 		$$->op = new int(6);
 		$$->num = new int(stoi(*$2));
 	}
+	| error
 
 %% 
 
@@ -242,7 +247,7 @@ main(int argc, char **argv) {
 	load_meta_data();
 	std::string input;
 	while(true) {
-		std::cout << std::endl << ">";
+		std::cout << std::endl << "> ";
 		yyparse();
 		if(stopFlag)
 			break;	
@@ -253,5 +258,4 @@ main(int argc, char **argv) {
 
 int yyerror(std::string msg) {
 	fprintf(stderr, "%s\n", msg.c_str());
-	exit(1);
 }
