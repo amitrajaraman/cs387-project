@@ -112,6 +112,7 @@ program
 				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
 				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
 				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
+				"'add constraint [eq/lt/gt/leq/geq/neq] <num> as <constraint_name> into <table_name>' to add a new constraint which checks all subsequent additions\n"
 				"'help' for help :)\n"
 				"'git' to show the git repository of this project.\n"
 				"'quit' to quit." << std::endl;
