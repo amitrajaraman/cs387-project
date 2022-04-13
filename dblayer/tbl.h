@@ -22,6 +22,12 @@ typedef struct {
 } Schema;
 
 typedef struct {
+    std::string constr_name;
+    int op;
+    int val;
+} Constraint;
+
+typedef struct {
     // UNIMPLEMENTED; 
     Schema *schema;
     int fd;
@@ -29,6 +35,7 @@ typedef struct {
 } Table ;
 
 typedef int RecId;
+
 
 int
 Table_Open(std::string fname, Schema *schema, bool overwrite, Table **table);

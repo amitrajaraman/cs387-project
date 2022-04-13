@@ -1,5 +1,6 @@
 #!/bin/bash
 
+clear
 cd ..
 
 cd pflayer && make clean && make && cd ..

@@ -135,10 +135,30 @@ loadCSV(std::string file, int index) {
 
 
 int
-insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index) {
+insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index, std::vector<Constraint*> constr) {
 	
 	std::string index_name = name + ".db.0";
+	// Check if the conditions are satisfied before inserting into the database!
+	std::string inp = row;
+	std::stringstream str(inp);
+	std::string tmp;
+	std::vector<std::string> toks;
+	while(getline(str, tmp, ';'))
+		toks.push_back(tmp);
 	
+	int inp_v = std::stoi(toks[index]);
+	for(int i=0; i<constr.size(); i++){
+		if((constr[i]->op == 1 && inp_v != constr[i]->val) ||
+		   (constr[i]->op == 2 && inp_v >= constr[i]->val) ||
+		   (constr[i]->op == 3 && inp_v <= constr[i]->val) ||
+		   (constr[i]->op == 4 && inp_v > constr[i]->val) ||
+		   (constr[i]->op == 5 && inp_v < constr[i]->val) ||
+		   (constr[i]->op == 6 && inp_v == constr[i]->val)){
+			   std::cout << "Input violates constraint " << constr[i]->constr_name << std::endl;
+			   return 2;
+		}
+	}
+
 	// Create an index for the population field
 	int indexFD = PF_OpenFile(&index_name[0]);
 
@@ -205,3 +225,27 @@ insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index)
 	// // ----
 	// return 0;
 }
+
+// int 
+// addConstraint(Table *tbl, Schema *sch, std::string constr_name, int op, int val){
+// 	Constraint *constr = new Constraint;
+
+// 	// Return -1 if constraint already exists
+// 	std::cout << "iterating" << std::endl;
+// 	std::cout << tbl->constraints->size() << std::endl;
+	
+// 	for(int i=0; i<tbl->constraints->size(); i++){
+// 		if(constr_name == tbl->constraints->at(i)->constr_name)
+// 			return -1;
+// 	}
+
+// 	std::cout << "iterated" << std::endl;
+// 	constr->constr_name = constr_name;
+// 	constr->op = op;
+// 	constr->val = val;
+// 	std::cout << "made struct" << std::endl;
+// 	tbl->constraints->push_back(constr);
+// 	std::cout << "pushed" << std::endl;
+	
+// 	return 0;
+// }

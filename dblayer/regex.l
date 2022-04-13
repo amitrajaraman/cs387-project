@@ -21,6 +21,18 @@ alpha [a-zA-Z]
 	yylval.name = new std::string(yytext);
 	return DUMP;
 }
+"add" {
+	add("ADD", std::string(yytext), yylineno);
+	return ADD;
+}
+"as" {
+	add("AS", std::string(yytext), yylineno);
+	return AS;
+}
+"constraint" {
+	add("CONSTRAINT", std::string(yytext), yylineno);
+	return CONSTRAINT;
+}
 "create" {
 	add("CREATE", std::string(yytext), yylineno);
 	return CREATE;

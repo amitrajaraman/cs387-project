@@ -19,12 +19,15 @@
 	extern struct tokens token_table[1000];
 	std::map<std::string, std::string> schema_meta_data;
 	std::map<std::string, int> index_meta_data;
+	std::map<std::string, std::vector<Constraint*>> constr_meta_data;
 
 	int load_meta_data() {
 		schema_meta_data.clear();
 		index_meta_data.clear();
-		std::vector<std::vector<std::string>> content;
-		std::vector<std::string> row;
+		constr_meta_data.clear();
+
+		std::vector<std::vector<std::string>> content, constr;
+		std::vector<std::string> row, rc;
 		std::string line, word;
 	
 		std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
@@ -36,12 +39,26 @@
 		{	
 			while(getline(file, line))
 			{
-				row.clear();
-				std::stringstream str(line);
-				while(getline(str, word, ';')) {
-					row.push_back(word);
+				// Schema information
+				if(line.at(0)=='$'){
+					line = line.substr(1, line.length());
+					row.clear();
+					std::stringstream str(line);
+					while(getline(str, word, ';')) {
+						row.push_back(word);
+					}
+					content.push_back(row);
 				}
-				content.push_back(row);
+				// Constraint Information
+				else if(line.at(0)=='#'){
+					line = line.substr(1, line.length());
+					rc.clear();
+					std::stringstream str(line);
+					while(getline(str, word, ';')){
+						rc.push_back(word);
+					}
+					constr.push_back(rc);
+				}
 			}
 		} 
 		else {
@@ -51,6 +68,13 @@
 		{
 			schema_meta_data[content[i][0]] = content[i][1];
 			index_meta_data[content[i][0]] = stoi(content[i][2]);
+		}
+		for(int i=0; i<constr.size(); i++){
+			Constraint *con = new Constraint;
+			con->constr_name = constr[i][1];
+			con->op = stoi(constr[i][2]);
+			con->val = stoi(constr[i][3]);
+			constr_meta_data[constr[i][0]].push_back(con);
 		}
 		file.close();
 		return 1;
@@ -62,7 +86,7 @@
 	std::vector<std::string> *colList;
 	Condition *condition;
 }
-%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX GIT INSERT INTO LEFT_PAR RIGHT_PAR SEMICOLON
+%token DUMP STAR WHERE QUIT HELP LT GT LEQ GEQ EQ NEQ COMMA CREATE TABLE FILE_KEYWORD INDEX GIT INSERT INTO LEFT_PAR RIGHT_PAR SEMICOLON ADD CONSTRAINT AS
 %token <name> NUM
 %token <name> NAME
 // %token <name> DUMP
@@ -83,6 +107,7 @@ program
 	| HELP {
 		std::cout << "Implemented commands:\n"
 				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
+				"'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table"
 				"'dump all <table_name>' to dump all data in the specified table\n"
 				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
 				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
@@ -100,7 +125,7 @@ program
 		outfile.open("meta_data.db", std::ios_base::app);
 		std::string s = *$4;
 		s = s.substr(0, s.length()-4);
-		outfile << s + ";" + schemaTxt + ";" + *$6; 
+		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + *$6 << std::endl; 
 		std::cout << "Created table!\n";
 	}
 	| DUMP STAR NAME {
@@ -169,11 +194,32 @@ program
 			std::cout << "Result not available";
 		std::string index_name = *$6 + ".db.0";
 
-		if(insertRow(tbl, schema, *$6, *($3), index_meta_data[*$6]) != 0)
+		if(insertRow(tbl, schema, *$6, *($3), index_meta_data[*$6], constr_meta_data[*$6]) != 0)
 			std::cout << "Invalid insert of row!" << std::endl;
 		else
 			std::cout << "Inserted successfully!" << std::endl;
 	}
+	| ADD CONSTRAINT condition AS NAME INTO NAME {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*($7)];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		
+		int ret = Table_Open(*$5 + ".db", schema, false, &tbl);
+		if(ret<0)
+			std::cout << "Result not available!" << std::endl;
+		std::string index_name = *$7 + "db.0";
+		
+		for(int i=0; i<constr_meta_data[*$7].size(); i++)
+			if(constr_meta_data[*$7][i]->constr_name == *$5){
+				std::cout << "constraint with same name already exists for this table!" << std::endl;
+				return -1;
+			}
+		
+		std::ofstream outfile;
+		outfile.open("meta_data.db", std::ios_base::app);
+		outfile << "#" + *$7 + ";" + *$5 + ";" + std::to_string(*($3->op)) + ";" + std::to_string(*($3->num)) << std::endl; 
+		std::cout << "Added Contraint!" << std::endl;
+ 	}
 	| error 
 
 row
