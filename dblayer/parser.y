@@ -191,7 +191,6 @@ row
 	| NUM {
 		$$ = new std::string(*($1));
 	}
-	| error
 
 column_list
 	: NAME {
@@ -202,7 +201,6 @@ column_list
 		$$ = $1;
 		$$->push_back(*($3));
 	}
-	| error
 
 
 condition
@@ -230,7 +228,6 @@ condition
 		$$->op = new int(6);
 		$$->num = new int(stoi(*$2));
 	}
-	| error
 
 %% 
 
