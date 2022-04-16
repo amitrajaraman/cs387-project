@@ -1,5 +1,4 @@
 #include "lockManager.h"
-#include <thread>
 
 lockManager::getLocks(vector<pair<std::string,int>> requestedLocks) {
 	accessLock.lock(); // is this needed?
