@@ -221,6 +221,25 @@ program
 		outfile << "#" + *$7 + ";" + *$5 + ";" + std::to_string(*($3->op)) + ";" + std::to_string(*($3->num)) << std::endl; 
 		std::cout << "Added Contraint!" << std::endl;
  	}
+	| DUMP CONSTRAINT NAME {
+		load_meta_data();
+		std::string schemaTxt = schema_meta_data[*($3)];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		
+		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
+		if(ret<0)
+			std::cout << "Result not available!" << std::endl;
+		std::string index_name = *$3 + "db.0";
+
+		if(constr_meta_data[*$3].size() == 0)
+			std::cout << "No constraints exist for this table!" << std::endl;
+		else{
+			std::cout << "Constraint Name\tCondition" << std::endl;
+			for(int i=0; i<constr_meta_data[*$3].size(); i++){
+				std::cout << constr_meta_data[*$3][i]->constr_name << "\t" << std::endl;
+			}
+		}
+	}
 	| error 
 
 row
