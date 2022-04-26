@@ -5,6 +5,7 @@
 #include <vector>
 #include "loaddb.h"
 #include "dumpdb.h"
+#include "client.h"
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -12,4 +13,7 @@ struct Condition {
     int* op;
     int* num;
 };
+
+extern queue<TransactionInstance> transaction_queue;
+
 #endif

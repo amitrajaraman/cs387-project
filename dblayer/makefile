@@ -6,7 +6,7 @@ SCAN = regex.l
 PARSE = parser.y
 CFLAGS = -g
 OBJS = scan.o parse.tab.o
-OBJ = tbl.o codec.o util.o ../pflayer/pflayer.a ../amlayer/amlayer.a
+OBJ = tbl.o codec.o util.o client.o ../pflayer/pflayer.a ../amlayer/amlayer.a
 
 all: loaddb $(TGT)
 
