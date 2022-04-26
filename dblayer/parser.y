@@ -126,7 +126,7 @@ program
 		outfile.open("meta_data.db", std::ios_base::app);
 		std::string s = *$4;
 		s = s.substr(0, s.length()-4);
-		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + *$6 << std::endl; 
+		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + *$6 << std::endl; 
 		std::cout << "Created table!\n";
 	}
 	| DUMP STAR NAME {
