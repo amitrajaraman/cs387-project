@@ -104,166 +104,49 @@
 program
 	: QUIT {
 		qc = 1;
-		stopFlag = 1;
 	}
 	| HELP {
 		qc = 2;
-		std::cout << "Implemented commands:\n"
-				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
-				"'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table"
-				"'dump all <table_name>' to dump all data in the specified table\n"
-				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
-				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
-				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
-				"'add constraint [eq/lt/gt/leq/geq/neq] <num> as <constraint_name> into <table_name>' to add a new constraint which checks all subsequent additions\n"
-				"'help' for help :)\n"
-				"'git' to show the git repository of this project.\n"
-				"'quit' to quit." << std::endl;
 	}
 	| GIT {
 		qc = 3;
-		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!" << std::endl;
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
 		qc = 0;
 		q.insert(q.end(),{*$4,*$6});
-		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
-		std::ofstream outfile;
-		outfile.open("meta_data.db", std::ios_base::app);
-		std::string s = *$4;
-		s = s.substr(0, s.length()-4);
-		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + *$6 << std::endl; 
-		std::cout << "Created table!\n";
 	}
 	| DUMP STAR NAME {
 		qc = 6;
 		q.insert(q.end(),{*$3});
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($3)];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available";
-		}
-		printAllRows(tbl, schema, printRow, NULL);
-		Table_Close(tbl);
 	}
 	| DUMP column_list NAME {
 		qc = 8;
 		q.insert(q.end(),{*$3});
 		cols = *$2; 
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($3)];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available";
-		}
-		printAllRows(tbl, schema, printRow, $2);
-		Table_Close(tbl);
 	}
 	| DUMP STAR NAME WHERE condition {
 		qc = 7;
 		q.insert(q.end(),{*$3});
 		cond.insert(cond.end(),{*($5->op),*($5->num)});
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($3)];
-
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available";
-		}
-		std::string index_name = *$3 + ".db.0";
-		char *index_name_c = new char[index_name.length() + 1];
-		strcpy(index_name_c, index_name.c_str());
-		int indexFD = PF_OpenFile(index_name_c);
-
-		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), NULL);
 	}
 	| DUMP column_list NAME WHERE condition {
 		qc = 9;
 		q.insert(q.end(),{*$3});
 		cond.insert(cond.end(),{*($5->op),*($5->num)});
 		cols = *$2;
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($3)];
-
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available";
-		}
-		std::string index_name = *$3 + ".db.0";
-		char *index_name_c = new char[index_name.length() + 1];
-		strcpy(index_name_c, index_name.c_str());
-		int indexFD = PF_OpenFile(index_name_c);
-
-		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), $2);
 	}
 	| INSERT LEFT_PAR row RIGHT_PAR INTO NAME {
 		qc = 4;
 		q.insert(q.end(),{*$3,*$6});
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($6)];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		int ret = Table_Open(*$6 + ".db", schema, false, &tbl);
-		if(ret < 0)
-			std::cout << "Result not available";
-		std::string index_name = *$6 + ".db.0";
-
-		if(insertRow(tbl, schema, *$6, *($3), index_meta_data[*$6], constr_meta_data[*$6]) != 0)
-			std::cout << "Invalid insert of row!" << std::endl;
-		else
-			std::cout << "Inserted successfully!" << std::endl;
 	}
 	| ADD CONSTRAINT condition AS NAME INTO NAME {
 		qc = 5;
 		q.insert(q.end(),{*$5,*$7});
 		cond.insert(cond.end(),{*($3->op),*($3->num)});
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($7)];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		
-		int ret = Table_Open(*$5 + ".db", schema, false, &tbl);
-		if(ret<0)
-			std::cout << "Result not available!" << std::endl;
-		std::string index_name = *$7 + "db.0";
-		
-		for(int i=0; i<constr_meta_data[*$7].size(); i++)
-			if(constr_meta_data[*$7][i]->constr_name == *$5){
-				std::cout << "constraint with same name already exists for this table!" << std::endl;
-				return -1;
-			}
-		
-		std::ofstream outfile;
-		outfile.open("meta_data.db", std::ios_base::app);
-		outfile << "#" + *$7 + ";" + *$5 + ";" + std::to_string(*($3->op)) + ";" + std::to_string(*($3->num)) << std::endl; 
-		std::cout << "Added Contraint!" << std::endl;
  	}
 	| DUMP CONSTRAINT NAME {
 		qc = 10;
 		q.insert(q.end(),{*$3});
-		load_meta_data();
-		std::string schemaTxt = schema_meta_data[*($3)];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		
-		int ret = Table_Open(*$3 + ".db", schema, false, &tbl);
-		if(ret<0)
-			std::cout << "Result not available!" << std::endl;
-		std::string index_name = *$3 + "db.0";
-
-		if(constr_meta_data[*$3].size() == 0)
-			std::cout << "No constraints exist for this table!" << std::endl;
-		else{
-			std::cout << "Constraint Name\tCondition" << std::endl;
-			for(int i=0; i<constr_meta_data[*$3].size(); i++){
-				std::cout << constr_meta_data[*$3][i]->constr_name << "\t" << std::endl;
-			}
-		}
 	}
 	| error 
 
@@ -321,33 +204,6 @@ condition
 	}
 
 %% 
-
-int parse_query(std::string input) {
-
-	//std::cout << "Welcome. Type `help` for help." << std::endl;
-
-	// Schema and index meta data is in file meta_data.db
-	load_meta_data();
-		
-	globalReadOffset = 0;
-	globalInputText = new char[input.size() + 1];
-
-	for (int i = 0; i < input.size(); i++) {
-		globalInputText[i] = input[i];
-	}
-	globalInputText[input.size()] = '\0';
-
-	yyparse();
-
-	if(stopFlag)
-		return 0;
-
-	delete[] globalInputText;	
-	if(tbl)
-		Table_Close(tbl);
-
-	return 1;
-}
 
 int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond){
     if(i == 0){
@@ -462,7 +318,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		if(ret < 0) {
 			std::cout << "Result not available";
 		}
-		printAllRows(tbl, schema, printRow, &cols);
+		printAllRows(tbl, schema, printRow, &col);
 		Table_Close(tbl);
     }
     else if(i == 9){
@@ -481,7 +337,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, cond[0], cond[1], &cols);
+		index_scan(tbl, schema, indexFD, cond[0], cond[1], &col);
     }
     else if(i == 10){
         //dump constraint name
@@ -504,6 +360,34 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		}
     }
 	return 0;
+}
+
+int parse_query(std::string input) {
+
+	//std::cout << "Welcome. Type `help` for help." << std::endl;
+
+	// Schema and index meta data is in file meta_data.db
+	load_meta_data();
+		
+	globalReadOffset = 0;
+	globalInputText = new char[input.size() + 1];
+
+	for (int i = 0; i < input.size(); i++) {
+		globalInputText[i] = input[i];
+	}
+	globalInputText[input.size()] = '\0';
+
+	yyparse();
+
+	if(stopFlag)
+		return 0;
+
+	delete[] globalInputText;	
+	if(tbl)
+		Table_Close(tbl);
+	executeQuery(qc,q,cols,cond);
+	q.clear(); cols.clear(); cond.clear();
+	return 1;
 }
 
 int yyerror(std::string msg) {

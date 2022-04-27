@@ -7,4 +7,5 @@ int main(int argc, char* argv[]) {
     parse_query(s);
     s = "dump all data";
     parse_query(s);
+    parse_query("help");
 }
