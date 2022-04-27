@@ -1,0 +1,2 @@
+create table file data.csv index 211
+dump all data11
