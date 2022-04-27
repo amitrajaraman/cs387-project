@@ -1,6 +1,7 @@
 #include "client.h"
 
 std::queue<TransactionInstance*> transaction_queue;
+pthread_mutex_t lock;
 
 TransactionInstance::TransactionInstance() {
     lock = PTHREAD_MUTEX_INITIALIZER;
@@ -13,7 +14,9 @@ void TransactionHandler::addQuery(std::string query) {
 }
 
 void TransactionHandler::executeTransaction() {
+    pthread_mutex_lock(&lock);
     transaction_queue.push(&txn);
+    pthread_mutex_unlock(&lock);
     pthread_mutex_lock(&txn.lock);
     while(txn.done == 0) {
         pthread_cond_wait(&txn.cond, &txn.lock);
