@@ -1,6 +1,6 @@
 #include "client.h"
 
-queue<TransactionInstance*> transaction_queue;
+std::queue<TransactionInstance*> transaction_queue;
 
 TransactionInstance::TransactionInstance() {
     lock = PTHREAD_MUTEX_INITIALIZER;
@@ -8,7 +8,7 @@ TransactionInstance::TransactionInstance() {
     done = 0;
 }
 
-void TransactionHandler::addQuery(string query) {
+void TransactionHandler::addQuery(std::string query) {
     txn.queries.push_back(query);
 }
 

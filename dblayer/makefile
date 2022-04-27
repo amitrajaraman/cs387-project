@@ -11,7 +11,7 @@ OBJ = tbl.o codec.o util.o client.o ../pflayer/pflayer.a ../amlayer/amlayer.a
 all: loaddb $(TGT)
 
 $(TGT): $(OBJS) $(OBJ)
-	$(CPP) --std=c++0x $(OBJS) $(OBJ) dumpdb.o loaddb.o -o $(TGT)
+	$(CPP) --std=c++0x $(OBJ) dumpdb.o loaddb.o parse.tab.c scan.c main.c -o $(TGT)
 
 dumpdb : dumpdb.o $(OBJ) ../pflayer/pflayer.a ../amlayer/amlayer.a
 	$(CPP) -c $(CFLAGS) -o dumpdb dumpdb.o $(OBJ) 
@@ -34,11 +34,11 @@ codec.o: codec.h codec.c
 util.o: util.h util.c tbl.h
 	$(CPP) -c $(CFLAGS) util.c
 
-scan.o: scan.c
-	$(CPP) --std=c++0x $(CFLAGS) -c $<
+# scan.o: scan.c
+# 	$(CPP) --std=c++0x $(CFLAGS) -c $<
 
-parse.tab.o: parse.tab.c
-	$(CPP) --std=c++0x $(CFLAGS) -c $<
+# parse.tab.o: parse.tab.c
+# 	$(CPP) --std=c++0x $(CFLAGS) -c $<
 
 %.o: %.c
 	$(CPP) --std=c++0x $(CFLAGS) -c $<

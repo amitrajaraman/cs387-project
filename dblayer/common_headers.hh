@@ -13,8 +13,14 @@ struct Condition {
     int* op;
     int* num;
 };
+struct tokens {
+    std::string token_name;
+    std::string lexeme;
+    int lineno;
+};
 
-extern queue<TransactionInstance> transaction_queue;
+extern std::queue<TransactionInstance> transaction_queue;
 int readInputForLexer(char* buffer,int *numBytesRead,int maxBytesToRead);
+int parse_query(std::string input);
 
 #endif

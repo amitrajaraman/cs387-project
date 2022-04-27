@@ -8,14 +8,11 @@
 #include <pthread.h>
 #include <queue>
 
-using namespace std;
-
-
 class TransactionInstance {
     public:
-    vector<string> queries;
+    std::vector<std::string> queries;
     int done;
-    string output;
+    std::string output;
     pthread_mutex_t lock;
     pthread_cond_t cond;
     TransactionInstance();
@@ -24,6 +21,6 @@ class TransactionInstance {
 class TransactionHandler {
     public:
     TransactionInstance txn;
-    void addQuery(string query);
+    void addQuery(std::string query);
     void executeTransaction();
 };

@@ -1,8 +1,9 @@
 %{
 	#include "common_headers.hh"
-
 	Table *tbl = NULL;
-
+	static int globalReadOffset;
+	// Text to read:
+	char *globalInputText;
 	int yylex();
 	int yyerror(std::string);
 	void yyset_in (FILE * _in_str );
@@ -11,23 +12,18 @@
 	extern int counting;
 	int stopFlag = 0;
 	Schema* schema;
-	struct tokens {
-		std::string token_name;
-		std::string lexeme;
-		int lineno;
-	};
 
 	extern struct tokens token_table[1000];
 	std::map<std::string, std::string> schema_meta_data;
 	std::map<std::string, int> index_meta_data;
-	std::map<std::string, std::vector<Constraint*>> constr_meta_data;
+	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
 
 	int load_meta_data() {
 		schema_meta_data.clear();
 		index_meta_data.clear();
 		constr_meta_data.clear();
 
-		std::vector<std::vector<std::string>> content, constr;
+		std::vector<std::vector<std::string> > content, constr;
 		std::vector<std::string> row, rc;
 		std::string line, word;
 	
@@ -298,34 +294,31 @@ condition
 
 %% 
 
-static int globalReadOffset;
-// Text to read:
-char *globalInputText;
+int parse_query(std::string input) {
 
-int
-main(int argc, char **argv) {
-
-	std::cout << "Welcome. Type `help` for help." << std::endl;
+	// std::cout << "Welcome. Type `help` for help." << std::endl;
 
 	// Schema and index meta data is in file meta_data.db
 	load_meta_data();
-	std::string input;
-	while(true) {
-		std::cout << std::endl << "> ";
-		globalReadOffset = 0;
-		getline(cin, input);
-		globalInputText = new char[input.size() + 1];
-		for (int i = 0; i < input.size(); i++) {
-			globalInputText[i] = input[i];
-		}
-		globalInputText[input.size()] = '\0';
-		yyparse();
-		if(stopFlag)
-			break;
-		delete[] globalInputText;	
+		
+	globalReadOffset = 0;
+	globalInputText = new char[input.size() + 1];
+
+	for (int i = 0; i < input.size(); i++) {
+		globalInputText[i] = input[i];
 	}
+	globalInputText[input.size()] = '\0';
+
+	yyparse();
+
+	if(stopFlag)
+		return 0;
+
+	delete[] globalInputText;	
 	if(tbl)
 		Table_Close(tbl);
+
+	return 1;
 }
 
 int yyerror(std::string msg) {

@@ -3,18 +3,14 @@
 	#include "parse.tab.h"
 	#undef YY_INPUT
 	#define YY_INPUT(b,r,s) readInputForLexer(b,&r,s)
-	struct tokens {
-		std::string token_name;
-		std::string lexeme;
-		int lineno;
-	} token_table[1000];
+	tokens token_table[1000];
 	int counting = 0;
 	void add(std::string t, std::string l, int ln);
 %}
-%option noyywrap
 
 digit [0-9]
 alpha [a-zA-Z]
+%option noyywrap
 
 %%
 
