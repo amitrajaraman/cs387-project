@@ -15,5 +15,6 @@ struct Condition {
 };
 
 extern queue<TransactionInstance> transaction_queue;
+int readInputForLexer(char* buffer,int *numBytesRead,int maxBytesToRead);
 
 #endif

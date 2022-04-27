@@ -1,6 +1,8 @@
 %{
 	#include "common_headers.hh"
 	#include "parse.tab.h"
+	#undef YY_INPUT
+	#define YY_INPUT(b,r,s) readInputForLexer(b,&r,s)
 	struct tokens {
 		std::string token_name;
 		std::string lexeme;

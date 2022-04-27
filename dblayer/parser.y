@@ -7,6 +7,7 @@
 	int yyerror(std::string);
 	void yyset_in (FILE * _in_str );
 	void yyset_out (FILE * _out_str);
+	int readInputForLexer(char* buffer,int *numBytesRead,int maxBytesToRead);
 	extern int counting;
 	int stopFlag = 0;
 	Schema* schema;
@@ -297,12 +298,12 @@ condition
 
 %% 
 
+static int globalReadOffset;
+// Text to read:
+char *globalInputText;
+
 int
 main(int argc, char **argv) {
-
-	yyset_in(stdin);
-	yyset_out(stdout);
-
 
 	std::cout << "Welcome. Type `help` for help." << std::endl;
 
@@ -311,9 +312,17 @@ main(int argc, char **argv) {
 	std::string input;
 	while(true) {
 		std::cout << std::endl << "> ";
+		globalReadOffset = 0;
+		getline(cin, input);
+		globalInputText = new char[input.size() + 1];
+		for (int i = 0; i < input.size(); i++) {
+			globalInputText[i] = input[i];
+		}
+		globalInputText[input.size()] = '\0';
 		yyparse();
 		if(stopFlag)
-			break;	
+			break;
+		delete[] globalInputText;	
 	}
 	if(tbl)
 		Table_Close(tbl);
@@ -321,4 +330,17 @@ main(int argc, char **argv) {
 
 int yyerror(std::string msg) {
 	fprintf(stderr, "%s\n", msg.c_str());
+}
+
+int readInputForLexer( char *buffer, int *numBytesRead, int maxBytesToRead ) {
+    int numBytesToRead = maxBytesToRead;
+    int bytesRemaining = strlen(globalInputText)-globalReadOffset;
+    int i;
+    if ( numBytesToRead > bytesRemaining ) { numBytesToRead = bytesRemaining; }
+    for ( i = 0; i < numBytesToRead; i++ ) {
+        buffer[i] = globalInputText[globalReadOffset+i];
+    }
+    *numBytesRead = numBytesToRead;
+    globalReadOffset += numBytesToRead;
+    return 0;
 }
