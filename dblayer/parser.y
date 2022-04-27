@@ -294,6 +294,163 @@ condition
 
 %% 
 
+int executeQuery(std::int i, std::vector<string>q, std::vector<string>col){
+    if(i == 0){
+        //create table
+        std::string schemaTxt = loadCSV(q[3], stoi(q[5]));
+		std::ofstream outfile;
+		outfile.open("meta_data.db", std::ios_base::app);
+		std::string s = q[3];
+		s = s.substr(0, s.length()-4);
+		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[5] << std::endl; 
+		std::cout << "Created table!\n";
+    }
+    else if(i == 1){
+        //quit
+        stopFlag = 1;
+    }
+    else if(i == 2){
+        //help
+        std::cout << "Implemented commands:\n"
+				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
+				"'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table"
+				"'dump all <table_name>' to dump all data in the specified table\n"
+				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
+				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
+				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
+				"'add constraint [eq/lt/gt/leq/geq/neq] <num> as <constraint_name> into <table_name>' to add a new constraint which checks all subsequent additions\n"
+				"'help' for help :)\n"
+				"'git' to show the git repository of this project.\n"
+				"'quit' to quit." << std::endl;
+    }
+    else if(i == 3){
+        //git
+        std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!" << std::endl;
+    }
+    else if(i == 4){
+        //insert
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[5]];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+
+		int ret = Table_Open(q[5] + ".db", schema, false, &tbl);
+		if(ret < 0)
+			std::cout << "Result not available";
+		std::string index_name = q[5] + ".db.0";
+
+		if(insertRow(tbl, schema, q[5], q[2], index_meta_data[q[5]], constr_meta_data[q[5]]) != 0)
+			std::cout << "Invalid insert of row!" << std::endl;
+		else
+			std::cout << "Inserted successfully!" << std::endl;
+    }
+    else if(i == 5){
+        //add constraint
+        // assuming input query is of the form ADD CONSTRAINT op num AS NAME INTO NAME
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[7]];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		
+		int ret = Table_Open(q[5] + ".db", schema, false, &tbl);
+		if(ret<0)
+			std::cout << "Result not available!" << std::endl;
+		std::string index_name = q[7] + "db.0";
+		
+		for(int i=0; i<constr_meta_data[q[7]].size(); i++)
+			if(constr_meta_data[q[7]][i]->constr_name == q[5]){
+				std::cout << "constraint with same name already exists for this table!" << std::endl;
+				return -1;
+			}
+		
+		std::ofstream outfile;
+		outfile.open("meta_data.db", std::ios_base::app);
+		outfile << "#" + q[7] + ";" + q[5] + ";" + q[2] + ";" + q[3] << std::endl; 
+		std::cout << "Added Contraint!" << std::endl;
+    }
+    else if(i == 6){
+        //dump all table_name
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[2]];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		int ret = Table_Open(q[2] + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		printAllRows(tbl, schema, printRow, NULL);
+		Table_Close(tbl);
+    }
+    else if(i == 7){
+        //dump all table_name where constraint
+        // assuming input query is of the form DUMP STAR NAME WHERE op num
+        //condition
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[2]];
+
+		Schema *schema = parseSchema(&schemaTxt[0]);
+
+		int ret = Table_Open(q[2] + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		std::string index_name = q[2] + ".db.0";
+		char *index_name_c = new char[index_name.length() + 1];
+		strcpy(index_name_c, index_name.c_str());
+		int indexFD = PF_OpenFile(index_name_c);
+
+		index_scan(tbl, schema, indexFD, q[4], q[5], NULL);
+    }
+    else if(i == 8){
+        //dump col-list table_name
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[2]];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		int ret = Table_Open(q[2] + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		printAllRows(tbl, schema, printRow, col);
+		Table_Close(tbl);
+    }
+    else if(i == 9){
+        //dump col-list table_name where op num
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[2]];
+
+		Schema *schema = parseSchema(&schemaTxt[0]);
+
+		int ret = Table_Open(q[2] + ".db", schema, false, &tbl);
+		if(ret < 0) {
+			std::cout << "Result not available";
+		}
+		std::string index_name = q[2] + ".db.0";
+		char *index_name_c = new char[index_name.length() + 1];
+		strcpy(index_name_c, index_name.c_str());
+		int indexFD = PF_OpenFile(index_name_c);
+
+		index_scan(tbl, schema, indexFD, q[4], q[5], col);
+    }
+    else if(i == 10){
+        //dump constraint name
+        load_meta_data();
+		std::string schemaTxt = schema_meta_data[q[2]];
+		Schema *schema = parseSchema(&schemaTxt[0]);
+		
+		int ret = Table_Open(q[2] + ".db", schema, false, &tbl);
+		if(ret<0)
+			std::cout << "Result not available!" << std::endl;
+		std::string index_name = q[2] + "db.0";
+
+		if(constr_meta_data[q[2]].size() == 0)
+			std::cout << "No constraints exist for this table!" << std::endl;
+		else{
+			std::cout << "Constraint Name\tCondition" << std::endl;
+			for(int i=0; i<constr_meta_data[q[2]].size(); i++){
+				std::cout << constr_meta_data[q[2]][i]->constr_name << "\t" << std::endl;
+			}
+		}
+    }
+
+}
+
 int parse_query(std::string input) {
 
 	// std::cout << "Welcome. Type `help` for help." << std::endl;
