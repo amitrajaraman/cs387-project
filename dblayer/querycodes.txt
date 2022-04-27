@@ -1,0 +1,13 @@
+create table 0
+quit 1
+help 2
+git 3
+insert 4
+add constraint 5
+dump all table_name 6
+dump all table_name where constraint 7
+dump col-list table_name 8
+dump col-list table_name where constraint 9
+dump constraint 10
+
+
