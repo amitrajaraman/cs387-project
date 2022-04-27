@@ -17,6 +17,8 @@
 	std::map<std::string, std::string> schema_meta_data;
 	std::map<std::string, int> index_meta_data;
 	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+	std::vector<std::string> q;
+	std::vector<std::string> cols;
 
 	int load_meta_data() {
 		schema_meta_data.clear();
@@ -99,9 +101,11 @@
 
 program
 	: QUIT {
+		q.push_back(*$1);
 		stopFlag = 1;
 	}
 	| HELP {
+		q.push_back(*$1);
 		std::cout << "Implemented commands:\n"
 				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
 				"'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table"
@@ -115,9 +119,11 @@ program
 				"'quit' to quit." << std::endl;
 	}
 	| GIT {
+		q.push_back(*$1);
 		std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!" << std::endl;
 	}
 	| CREATE TABLE FILE_KEYWORD FILE_NAME INDEX NUM {
+		q.insert(q.end(),{*$1,*$2,*$3,*$4,*$5,*$6});
 		std::string schemaTxt = loadCSV(*$4, stoi(*$6));
 		std::ofstream outfile;
 		outfile.open("meta_data.db", std::ios_base::app);
@@ -127,6 +133,7 @@ program
 		std::cout << "Created table!\n";
 	}
 	| DUMP STAR NAME {
+		q.insert(q.end(),{*$1,*$2,*$3});
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -138,6 +145,8 @@ program
 		Table_Close(tbl);
 	}
 	| DUMP column_list NAME {
+		q.insert(q.end(),{*$1,"columns",*$3});
+		cols = *$2; 
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -149,6 +158,7 @@ program
 		Table_Close(tbl);
 	}
 	| DUMP STAR NAME WHERE condition {
+		q.insert(q.end(),{*$1,*$2,*$3,*$4,*($5->op),*($5->num)});
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 
@@ -166,6 +176,8 @@ program
 		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), NULL);
 	}
 	| DUMP column_list NAME WHERE condition {
+		q.insert(q.end(),{*$1,"columns",*$3,*$4,*($5->op),*($5->num)});
+		cols = *$2;
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 
@@ -183,6 +195,7 @@ program
 		index_scan(tbl, schema, indexFD, *($5->op), *($5->num), $2);
 	}
 	| INSERT LEFT_PAR row RIGHT_PAR INTO NAME {
+		q.insert(q.end(),{*$1,*$2,*$3,*$4,*$5,*$6});
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($6)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -198,6 +211,7 @@ program
 			std::cout << "Inserted successfully!" << std::endl;
 	}
 	| ADD CONSTRAINT condition AS NAME INTO NAME {
+		q.insert(q.end(),{*$1,*$2,*($3->op),*($3->num),*$4,*$5,*$6,*$7});
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($7)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -219,6 +233,7 @@ program
 		std::cout << "Added Contraint!" << std::endl;
  	}
 	| DUMP CONSTRAINT NAME {
+		q.insert(q.end(),{*$1,*$2,*$3});
 		load_meta_data();
 		std::string schemaTxt = schema_meta_data[*($3)];
 		Schema *schema = parseSchema(&schemaTxt[0]);
