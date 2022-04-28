@@ -24,6 +24,8 @@ public:
 	pthread_cond_t lmCond;
 	pthread_mutex_t lmLock;
 	std::map<std::string,lockObject> lockMap;
+	pthread_mutex_t databaseLock;
+	int dbLockAcquired;
 	
 	lockManager();
 
