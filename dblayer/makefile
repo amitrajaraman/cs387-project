@@ -6,7 +6,7 @@ SCAN = regex.l
 PARSE = parser.y
 CFLAGS = -g
 OBJS = scan.o parse.tab.o
-OBJ = tbl.o codec.o util.o client.o ../pflayer/pflayer.a ../amlayer/amlayer.a
+OBJ = tbl.o codec.o util.o client.o lockManager.o ../pflayer/pflayer.a ../amlayer/amlayer.a
 
 all: loaddb $(TGT)
 
@@ -33,12 +33,6 @@ codec.o: codec.h codec.c
 
 util.o: util.h util.c tbl.h
 	$(CPP) -c $(CFLAGS) util.c
-
-# scan.o: scan.c
-# 	$(CPP) --std=c++0x $(CFLAGS) -c $<
-
-# parse.tab.o: parse.tab.c
-# 	$(CPP) --std=c++0x $(CFLAGS) -c $<
 
 %.o: %.c
 	$(CPP) --std=c++0x $(CFLAGS) -c $<

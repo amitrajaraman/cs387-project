@@ -22,7 +22,7 @@
 	std::vector<std::string> cols;
 	std::vector<int> cond;
 	std::string table = ""; // $ would be a reserved keyword for database
-	int lock_type = -1;
+	int lock_type = -1;  // 0 for X-lock and 1 for S-lock
 
 	int load_meta_data() {
 		schema_meta_data.clear();
@@ -117,28 +117,28 @@ program
 		qc = 0;
 		q.insert(q.end(),{*$4,*$6});
 		table = "$";
-		lock_type = 1; 
+		lock_type = 0; 
 
 	}
 	| DUMP STAR NAME {
 		qc = 6;
 		q.insert(q.end(),{*$3});
 		table = *$3;
-		lock_type = 0;
+		lock_type = 1;
 	}
 	| DUMP column_list NAME {
 		qc = 8;
 		q.insert(q.end(),{*$3});
 		cols = *$2;
 		table = *$3;
-		lock_type = 0;
+		lock_type = 1;
 	}
 	| DUMP STAR NAME WHERE condition {
 		qc = 7;
 		q.insert(q.end(),{*$3});
 		cond.insert(cond.end(),{*($5->op),*($5->num)});
 		table = *$3;
-		lock_type = 0;
+		lock_type = 1;
 	}
 	| DUMP column_list NAME WHERE condition {
 		qc = 9;
@@ -146,20 +146,20 @@ program
 		cond.insert(cond.end(),{*($5->op),*($5->num)});
 		cols = *$2;
 		table = *$3;
-		lock_type = 0;
+		lock_type = 1;
 	}
 	| INSERT LEFT_PAR row RIGHT_PAR INTO NAME {
 		qc = 4;
 		q.insert(q.end(),{*$3,*$6});
 		table = *$6;
-		lock_type = 1;
+		lock_type = 0;
 	}
 	| ADD CONSTRAINT condition AS NAME INTO NAME {
 		qc = 5;
 		q.insert(q.end(),{*$5,*$7});
 		cond.insert(cond.end(),{*($3->op),*($3->num)});
 		table = "$";
-		lock_type = 1;
+		lock_type = 0;
  	}
 	| DUMP CONSTRAINT NAME {
 		qc = 10;

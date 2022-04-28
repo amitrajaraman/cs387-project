@@ -1,8 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 #include <filesystem>
-
+#include <semaphore.h>
+#include "lockManager.h"
 #include "client.h"
 
 using std::__fs::filesystem::directory_iterator;
@@ -15,6 +17,7 @@ extern int qc;
 extern std::vector<std::string> q;
 extern std::vector<std::string> cols;
 extern std::vector<int> cond;
+lockManager lm;
 
 void getCandT(std::string s, int &c, int &t) {
     std::string r = s.substr(12);
@@ -48,13 +51,29 @@ void* client(void* d) {
     }
 }
 struct thread_args {
-    std::vector<std::string> tables;
-    std::vector<int> table_locks;
+    std::vector<std::pair<std::string,int> > table_and_locks;
     std::vector<int> qcs;
     std::vector<std::vector<std::string> > qs;
     std::vector<std::vector<std::string> > colss;
     std::vector<std::vector<int> > conds;
+    TransactionInstance* txn;
 };
+
+void* transaction_final_execution(void* _args) {
+    struct thread_args *args = (struct thread_args *) _args;
+    std::vector<sem_t*> s = lm.getLocks(args->table_and_locks);
+    // waiting on the semaphores
+    for(int i = 0; i < s.size(); i++) {
+        sem_wait(s[i]);
+    }
+    // making a local copy of the required tables
+    for(int i = 0; i < args->table_and_locks.size(); i++) {
+        // args->table_and_locks[i].first;
+    }
+    for(int i = 0; i < s.size(); i++) {
+        sem_post(s[i]);
+    }
+}
 
 void* server(void* d) {
     int i = *((int *)d);
@@ -76,17 +95,16 @@ void* server(void* d) {
 	            std::vector<int> cond1 = cond;
                 if(table != "") {
                     int found = 0;
-                    for(int j = 0; j < args->tables.size(); j++) {
-                        if(args->tables[j] == t) {
+                    for(int j = 0; j < args->table_and_locks.size(); j++) {
+                        if(args->table_and_locks[j].first == t) {
                             found = 1;
-                            if(args->table_locks[j] > lt) {
-                                args->table_locks[j] = lt;
+                            if(args->table_and_locks[j].second < lt) {
+                                args->table_and_locks[j].second = lt;
                             }
                         }
                     }
-                    if(found == 1) {
-                        args->tables.push_back(t);
-                        args->table_locks.push_back(lt);
+                    if(found == 0) {
+                        args->table_and_locks.push_back(std::pair<std::string, int>(t, lt));
                     }
                 }
                 args->qcs.push_back(qc1);
@@ -94,58 +112,56 @@ void* server(void* d) {
                 args->colss.push_back(cols1);
                 args->conds.push_back(cond1);
             }
-
-
+            args->txn = txn;
+            std::sort(args->table_and_locks.begin(), args->table_and_locks.end());
+            pthread_t *p = (pthread_t *)malloc(sizeof(pthread_t));
+            pthread_create(p, NULL, transaction_final_execution, (void *)args);
         }
     }
 }
 
 
-void* transaction_final_execution(void* args) {
-
-}
-
 int main(int argc, char* argv[]) {
 
-    int num_clients = 2;
-    int num_server = 1;
-    int *client_thread_id;
-    int *server_thread_id;
-    pthread_t *client_thread;
-    pthread_t *server_thread;
-    client_thread_id = (int *)malloc(sizeof(int) * num_clients);
-    client_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_clients);
-    server_thread_id = (int *)malloc(sizeof(int) * num_server);
-    server_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_server);
-    int i;
-    for (i = 0; i < num_clients; i++) {
-        client_thread_id[i] = i + 1;
-    }
+    // int num_clients = 2;
+    // int num_server = 1;
+    // int *client_thread_id;
+    // int *server_thread_id;
+    // pthread_t *client_thread;
+    // pthread_t *server_thread;
+    // client_thread_id = (int *)malloc(sizeof(int) * num_clients);
+    // client_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_clients);
+    // server_thread_id = (int *)malloc(sizeof(int) * num_server);
+    // server_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_server);
+    // int i;
+    // for (i = 0; i < num_clients; i++) {
+    //     client_thread_id[i] = i + 1;
+    // }
 
-    for(i = 0; i < num_server; i++) {
-        server_thread_id[i] = i + 1;
-    }
+    // for(i = 0; i < num_server; i++) {
+    //     server_thread_id[i] = i + 1;
+    // }
 
-    for (i = 0; i < num_clients; i++) {
-        pthread_create(&client_thread[i], NULL, client, (void *)&client_thread_id[i]);
-    }
+    // for (i = 0; i < num_clients; i++) {
+    //     pthread_create(&client_thread[i], NULL, client, (void *)&client_thread_id[i]);
+    // }
 
-    for (i = 0; i < num_server; i++) {
-        pthread_create(&server_thread[i], NULL, server, (void *)&server_thread_id[i]);
-    }
+    // for (i = 0; i < num_server; i++) {
+    //     pthread_create(&server_thread[i], NULL, server, (void *)&server_thread_id[i]);
+    // }
 
-    for (i = 0; i < num_clients; i++)
-    {
-        pthread_join(client_thread[i], NULL);
-        printf("client %d joined\n", i);
-    }
+    // for (i = 0; i < num_clients; i++)
+    // {
+    //     pthread_join(client_thread[i], NULL);
+    //     printf("client %d joined\n", i);
+    // }
 
-    for (i = 0; i < num_server; i++)
-    {
-        pthread_join(server_thread[i], NULL);
-        printf("server joined\n");
-    }
-    std::cout << "Everything is done. But we won't ever reach here :( \n";
+    // for (i = 0; i < num_server; i++)
+    // {
+    //     pthread_join(server_thread[i], NULL);
+    //     printf("server joined\n");
+    // }
+    // std::cout << "Everything is done. But we won't ever reach here :( \n";
     std::string s = "create table file data.csv index 2";
     parse_query(s);
     s = "dump all data";
