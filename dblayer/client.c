@@ -19,6 +19,7 @@ void TransactionHandler::executeTransaction() {
     pthread_mutex_unlock(&lock);
     pthread_mutex_lock(&txn.lock);
     while(txn.done == 0) {
+        // std::cout << "Client About to wait for txn to complete \n";
         pthread_cond_wait(&txn.cond, &txn.lock);
     }
     pthread_mutex_unlock(&txn.lock);

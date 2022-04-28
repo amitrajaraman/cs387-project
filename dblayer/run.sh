@@ -9,7 +9,7 @@ cd dblayer && make clean && make
 
 ./interface
 
-make clean
-cd .. && cd amlayer && make clean
-cd .. && cd pflayer && make clean
-cd ../dblayer
+# make clean
+# cd .. && cd amlayer && make clean
+# cd .. && cd pflayer && make clean
+# cd ../dblayer
