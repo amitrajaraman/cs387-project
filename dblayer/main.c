@@ -47,6 +47,7 @@ void* client(void* d) {
             }
             infile.close();
             txnh.txn.client_id = i;
+            std::cout << "Client " << i << " Executed Transaction\n";
             txnh.executeTransaction();
         }
     }
@@ -61,6 +62,7 @@ struct thread_args {
 };
 
 void* transaction_final_execution(void* _args) {
+    // std::cout << "Entered Here" << std::endl;
     struct thread_args *args = (struct thread_args *) _args;
     int client_id = args->txn->client_id;
     int k = lm.getLocks(client_id, args->table_and_locks);
@@ -68,6 +70,23 @@ void* transaction_final_execution(void* _args) {
     for(int i = 0; i < args->table_and_locks.size(); i++) {
         std::string tbl = args->table_and_locks[i].first;
         int lock_type = args->table_and_locks[i].second;
+
+        std::string line;
+        std::ifstream ini_file("meta_data.db");
+        std::ofstream out_file("meta_data_" + std::to_string(client_id) + ".db");
+    
+        if(ini_file && out_file){
+            while(getline(ini_file,line)){
+                out_file << line << "\n";
+            }        
+        } else {
+            //Something went wrong
+            printf("Cannot read File");
+        }
+        ini_file.close();
+        out_file.close();
+        std::cout << "Meta data copied\n";
+
         if(tbl!="$" && lock_type == 0) {
             // copying tbl.db to tbl_<client_id>.db
             std::string line;
@@ -84,25 +103,12 @@ void* transaction_final_execution(void* _args) {
             }
             ini_file.close();
             out_file.close();
+            std::cout << "table file copied to " << tbl + "_" + std::to_string(client_id) + ".db" << std::endl;
         }
-        if(tbl=="$") {
-            std::string line;
-            std::ifstream ini_file("meta_data.db");
-            std::ofstream out_file("meta_data_" + std::to_string(client_id) + ".db");
-        
-            if(ini_file && out_file){
-                while(getline(ini_file,line)){
-                    out_file << line << "\n";
-                }        
-            } else {
-                //Something went wrong
-                printf("Cannot read File");
-            }
-            ini_file.close();
-            out_file.close();
-        }
+       
         for(int i = 0; i < args->qcs.size(); i++) {
             executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id);
+            std::cout << "A query was executed completely" << std::endl;
         }
         for(int i = 0; i < args->table_and_locks.size(); i++) {
             if(args->table_and_locks[i].first != "$") {
@@ -121,40 +127,47 @@ void* transaction_final_execution(void* _args) {
                 }
                 ini_file.close();
                 out_file.close();
-            } else {
-                // copy back meta_data_<client_id>.db to meta_data.db
-                std::string line;
-                std::ifstream ini_file("meta_data_" + std::to_string(client_id) + ".db");
-                std::ofstream out_file("meta_data.db");
-            
-                if(ini_file && out_file){
-                    while(getline(ini_file,line)){
-                        out_file << line << "\n";
-                    }        
-                } else {
-                    //Something went wrong
-                    printf("Cannot read File");
-                }
-                ini_file.close();
-                out_file.close();
             }
         }
+        // copy back meta_data_<client_id>.db to meta_data.db
+            std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
+            std::ofstream out_file1("meta_data.db");
+        
+            if(ini_file1 && out_file1){
+                while(getline(ini_file1,line)){
+                    out_file1 << line << "\n";
+                }        
+            } else {
+                //Something went wrong
+                printf("Cannot read File");
+            }
+            ini_file1.close();
+            out_file1.close();
     }
     k = lm.releaseLocks(client_id, args->table_and_locks);
+    pthread_mutex_lock(&(args->txn->lock));
+    args->txn->done = 1;
+    pthread_cond_signal(&(args->txn->cond));
+    pthread_mutex_unlock(&(args->txn->lock));
+    // std::cout << "Exited also\n";
 }
 
 void* server(void* d) {
-    int i = *((int *)d);
-    // we don't need this i anywhere though
+    int l = *((int *)d);
+    std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
+	file2.close();
+    // we don't need this l anywhere though
     while(true) {
         if(!transaction_queue.empty()) {
             TransactionInstance* txn = transaction_queue.front();
             transaction_queue.pop();
-
+            // std::cout << "A transaction was popped\nAnd it has following queries:\n";
             std::vector<std::string> queries = txn->queries;
+
             struct thread_args *args = new(struct thread_args);
             for(int i = 0; i < queries.size(); i++) {
                 parse_query(queries[i]);
+                std::cout << "Parsed " << queries[i] << std::endl;
                 std::string t = table;
                 int lt = lock_type;
                 int qc1 = qc;
@@ -193,7 +206,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-    int num_clients = 2;
+    int num_clients = 1;
     int num_server = 1;
     int *client_thread_id;
     int *server_thread_id;

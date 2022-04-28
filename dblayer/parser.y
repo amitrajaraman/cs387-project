@@ -15,16 +15,16 @@
 	Schema* schema;
 
 	extern struct tokens token_table[1000];
-	std::map<std::string, std::string> schema_meta_data;
-	std::map<std::string, int> index_meta_data;
-	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
 	std::vector<std::string> q;
 	std::vector<std::string> cols;
 	std::vector<int> cond;
 	std::string table = ""; // $ would be a reserved keyword for database
 	int lock_type = -1;  // 0 for X-lock and 1 for S-lock
+	std::map<std::string, std::string> schema_meta_data;
+	std::map<std::string, int> index_meta_data;
+	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
 
-	int load_meta_data() {
+	int load_meta_data(std::map<std::string, std::string> &schema_meta_data, std::map<std::string, int> &index_meta_data, std::map<std::string, std::vector<Constraint*> > &constr_meta_data, std::string file_name = "meta_data.db") {
 		schema_meta_data.clear();
 		index_meta_data.clear();
 		constr_meta_data.clear();
@@ -33,9 +33,9 @@
 		std::vector<std::string> row, rc;
 		std::string line, word;
 	
-		std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
+		std::fstream file2 (file_name,  std::fstream::in | std::fstream::out | std::fstream::app );
 		file2.close();
-		std::fstream file ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::ate );
+		std::fstream file (file_name,  std::fstream::in | std::fstream::out | std::fstream::ate );
 
 		file.seekg(0, std::ios::beg);
 		if(file.is_open())
@@ -231,7 +231,38 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		outfile.open(local, std::ios_base::app);
 		std::string s = q[0];
 		s = s.substr(0, s.length()-4);
-		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl; 
+		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
+
+		// copy <table>.db to <table>_<id>.db
+		std::string line;
+		std::ifstream ini_file(s + ".db");
+		std::ofstream out_file(s+"_" + std::to_string(client_id) + ".db");
+	
+		if(ini_file && out_file){
+			while(getline(ini_file,line)){
+				out_file << line << "\n";
+			}        
+		} else {
+			//Something went wrong
+			printf("Cannot read File");
+		}
+		ini_file.close();
+		out_file.close();
+
+		// copy the index file also
+		std::ifstream ini_file2(s + ".db.0");
+		std::ofstream out_file2(s+"_" + std::to_string(client_id) + ".db.0");
+	
+		if(ini_file2 && out_file2){
+			while(getline(ini_file2,line)){
+				out_file2 << line << "\n";
+			}        
+		} else {
+			//Something went wrong
+			printf("Cannot read File");
+		}
+		ini_file2.close();
+		out_file2.close();
 		std::cout << "Created table!\n";
     }
     else if(i == 1){
@@ -258,7 +289,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 4){
         //insert
-        load_meta_data();
+		std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 
@@ -275,7 +309,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     else if(i == 5){
         //add constraint
         // assuming input query is of the form ADD CONSTRAINT op num AS NAME INTO NAME
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		
@@ -298,7 +335,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 6){
         //dump all table_name
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[0]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		int ret = Table_Open(q[0] + ".db", schema, false, &tbl);
@@ -312,7 +352,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
         //dump all table_name where constraint
         // assuming input query is of the form DUMP STAR NAME WHERE op num
         //condition
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[0]];
 
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -330,7 +373,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 8){
         //dump col-list table_name
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[0]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		int ret = Table_Open(q[0] + ".db", schema, false, &tbl);
@@ -342,7 +388,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 9){
         //dump col-list table_name where op num
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[0]];
 
 		Schema *schema = parseSchema(&schemaTxt[0]);
@@ -360,7 +409,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 10){
         //dump constraint name
-        load_meta_data();
+        std::map<std::string, std::string> schema_meta_data;
+		std::map<std::string, int> index_meta_data;
+		std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+        load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data_" + std::to_string(client_id) + ".db");
 		std::string schemaTxt = schema_meta_data[q[0]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		
@@ -386,7 +438,10 @@ int parse_query(std::string input) {
 	//std::cout << "Welcome. Type `help` for help." << std::endl;
 
 	// Schema and index meta data is in file meta_data.db
-	load_meta_data();
+	std::map<std::string, std::string> schema_meta_data;
+	std::map<std::string, int> index_meta_data;
+	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+    load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, "meta_data.db");
 		
 	globalReadOffset = 0;
 	globalInputText = new char[input.size() + 1];
