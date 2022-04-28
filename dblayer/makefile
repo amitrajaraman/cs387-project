@@ -11,7 +11,7 @@ OBJ = tbl.o codec.o util.o client.o lockManager.o ../pflayer/pflayer.a ../amlaye
 all: loaddb $(TGT)
 
 $(TGT): $(OBJS) $(OBJ)
-	$(CPP) --std=c++0x $(OBJ) dumpdb.o loaddb.o parse.tab.c scan.c main.c -o $(TGT)
+	$(CPP) -std=c++17 -Wall -pthread $(OBJ) dumpdb.o loaddb.o parse.tab.c scan.c main.c -o $(TGT) -lstdc++fs
 
 dumpdb : dumpdb.o $(OBJ) ../pflayer/pflayer.a ../amlayer/amlayer.a
 	$(CPP) -c $(CFLAGS) -o dumpdb dumpdb.o $(OBJ) 

@@ -2,12 +2,12 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <semaphore.h>
 #include "lockManager.h"
 #include "client.h"
 
-using std::__fs::filesystem::directory_iterator;
+using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
 int parse_query(std::string s);
 int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id);
