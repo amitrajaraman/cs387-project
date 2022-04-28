@@ -10,6 +10,7 @@
 using std::__fs::filesystem::directory_iterator;
 extern 
 int parse_query(std::string s);
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id);
 extern std::queue<TransactionInstance*> transaction_queue;
 extern std::string table;
 extern int lock_type;
@@ -61,18 +62,85 @@ struct thread_args {
 
 void* transaction_final_execution(void* _args) {
     struct thread_args *args = (struct thread_args *) _args;
-    std::vector<sem_t*> s = lm.getLocks(args->table_and_locks);
-    // waiting on the semaphores
-    for(int i = 0; i < s.size(); i++) {
-        sem_wait(s[i]);
-    }
+    int client_id = args->txn->client_id;
+    int k = lm.getLocks(client_id, args->table_and_locks);
     // making a local copy of the required tables
     for(int i = 0; i < args->table_and_locks.size(); i++) {
-        // args->table_and_locks[i].first;
+        std::string tbl = args->table_and_locks[i].first;
+        int lock_type = args->table_and_locks[i].second;
+        if(tbl!="$" && lock_type == 0) {
+            // copying tbl.db to tbl_<client_id>.db
+            std::string line;
+            std::ifstream ini_file(tbl + ".db");
+            std::ofstream out_file(tbl + "_" + std::to_string(client_id) + ".db");
+        
+            if(ini_file && out_file){
+                while(getline(ini_file,line)){
+                    out_file << line << "\n";
+                }        
+            } else {
+                //Something went wrong
+                printf("Cannot read File");
+            }
+            ini_file.close();
+            out_file.close();
+        }
+        if(tbl=="$") {
+            std::string line;
+            std::ifstream ini_file("meta_data.db");
+            std::ofstream out_file("meta_data_" + std::to_string(client_id) + ".db");
+        
+            if(ini_file && out_file){
+                while(getline(ini_file,line)){
+                    out_file << line << "\n";
+                }        
+            } else {
+                //Something went wrong
+                printf("Cannot read File");
+            }
+            ini_file.close();
+            out_file.close();
+        }
+        for(int i = 0; i < args->qcs.size(); i++) {
+            executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id);
+        }
+        for(int i = 0; i < args->table_and_locks.size(); i++) {
+            if(args->table_and_locks[i].first != "$") {
+                // copy back table_<client_id>.db to table.db
+                std::string line;
+                std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
+                std::ofstream out_file(tbl + ".db");
+            
+                if(ini_file && out_file){
+                    while(getline(ini_file,line)){
+                        out_file << line << "\n";
+                    }        
+                } else {
+                    //Something went wrong
+                    printf("Cannot read File");
+                }
+                ini_file.close();
+                out_file.close();
+            } else {
+                // copy back meta_data_<client_id>.db to meta_data.db
+                std::string line;
+                std::ifstream ini_file("meta_data_" + std::to_string(client_id) + ".db");
+                std::ofstream out_file("meta_data.db");
+            
+                if(ini_file && out_file){
+                    while(getline(ini_file,line)){
+                        out_file << line << "\n";
+                    }        
+                } else {
+                    //Something went wrong
+                    printf("Cannot read File");
+                }
+                ini_file.close();
+                out_file.close();
+            }
+        }
     }
-    for(int i = 0; i < s.size(); i++) {
-        sem_post(s[i]);
-    }
+    k = lm.releaseLocks(client_id, args->table_and_locks);
 }
 
 void* server(void* d) {
@@ -93,6 +161,8 @@ void* server(void* d) {
                 std::vector<std::string> q1 = q;
 	            std::vector<std::string> cols1 = cols;
 	            std::vector<int> cond1 = cond;
+                qc = -1;
+                q.clear(); cols.clear(); cond.clear();
                 if(table != "") {
                     int found = 0;
                     for(int j = 0; j < args->table_and_locks.size(); j++) {
@@ -123,48 +193,48 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-    // int num_clients = 2;
-    // int num_server = 1;
-    // int *client_thread_id;
-    // int *server_thread_id;
-    // pthread_t *client_thread;
-    // pthread_t *server_thread;
-    // client_thread_id = (int *)malloc(sizeof(int) * num_clients);
-    // client_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_clients);
-    // server_thread_id = (int *)malloc(sizeof(int) * num_server);
-    // server_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_server);
-    // int i;
-    // for (i = 0; i < num_clients; i++) {
-    //     client_thread_id[i] = i + 1;
-    // }
+    int num_clients = 2;
+    int num_server = 1;
+    int *client_thread_id;
+    int *server_thread_id;
+    pthread_t *client_thread;
+    pthread_t *server_thread;
+    client_thread_id = (int *)malloc(sizeof(int) * num_clients);
+    client_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_clients);
+    server_thread_id = (int *)malloc(sizeof(int) * num_server);
+    server_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_server);
+    int i;
+    for (i = 0; i < num_clients; i++) {
+        client_thread_id[i] = i + 1;
+    }
 
-    // for(i = 0; i < num_server; i++) {
-    //     server_thread_id[i] = i + 1;
-    // }
+    for(i = 0; i < num_server; i++) {
+        server_thread_id[i] = i + 1;
+    }
 
-    // for (i = 0; i < num_clients; i++) {
-    //     pthread_create(&client_thread[i], NULL, client, (void *)&client_thread_id[i]);
-    // }
+    for (i = 0; i < num_clients; i++) {
+        pthread_create(&client_thread[i], NULL, client, (void *)&client_thread_id[i]);
+    }
 
-    // for (i = 0; i < num_server; i++) {
-    //     pthread_create(&server_thread[i], NULL, server, (void *)&server_thread_id[i]);
-    // }
+    for (i = 0; i < num_server; i++) {
+        pthread_create(&server_thread[i], NULL, server, (void *)&server_thread_id[i]);
+    }
 
-    // for (i = 0; i < num_clients; i++)
-    // {
-    //     pthread_join(client_thread[i], NULL);
-    //     printf("client %d joined\n", i);
-    // }
+    for (i = 0; i < num_clients; i++)
+    {
+        pthread_join(client_thread[i], NULL);
+        printf("client %d joined\n", i);
+    }
 
-    // for (i = 0; i < num_server; i++)
-    // {
-    //     pthread_join(server_thread[i], NULL);
-    //     printf("server joined\n");
-    // }
-    // std::cout << "Everything is done. But we won't ever reach here :( \n";
-    std::string s = "create table file data.csv index 2";
-    parse_query(s);
-    s = "dump all data";
-    parse_query(s);
-    parse_query("help");
+    for (i = 0; i < num_server; i++)
+    {
+        pthread_join(server_thread[i], NULL);
+        printf("server joined\n");
+    }
+    std::cout << "Everything is done. But we won't ever reach here :( \n";
+    // std::string s = "create table file data.csv index 2";
+    // parse_query(s);
+    // s = "dump all data";
+    // parse_query(s);
+    // parse_query("help");
 }

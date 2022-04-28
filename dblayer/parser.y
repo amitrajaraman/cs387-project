@@ -404,8 +404,6 @@ int parse_query(std::string input) {
 	delete[] globalInputText;	
 	if(tbl)
 		Table_Close(tbl);
-	executeQuery(qc,q,cols,cond,0);
-	q.clear(); cols.clear(); cond.clear();
 	return 1;
 }
 
