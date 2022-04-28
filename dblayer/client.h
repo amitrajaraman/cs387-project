@@ -15,6 +15,7 @@ class TransactionInstance {
     std::string output;
     pthread_mutex_t lock;
     pthread_cond_t cond;
+    int client_id;
     TransactionInstance();
 };
 
