@@ -23,12 +23,12 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 	pthread_mutex_lock(&lmLock);
 	std::vector<sem_t*> semVec;
 	for (auto tbl : requestedLocks) {
-		if(tbl.second == 0) {
+		if(tbl.second == 1) {
 			while(lockMap[tbl.first].xAcquired != 0)
 				pthread_cond_wait(&lmCond, &lmLock);
 			sem_wait(lockMap[tbl.first].sLock);
 		}
-		else if(tbl.second == 1) {
+		else if(tbl.second == 0) {
 			while(lockMap[tbl.first].lockCount > 0)
 				pthread_cond_wait(&lmCond, &lmLock);
 			sem_wait(lockMap[tbl.first].xLock);
@@ -44,11 +44,11 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 int lockManager::releaseLocks(int clientId, std::vector<std::pair<std::string,int>> requestedLocks) {
 	pthread_mutex_lock(&lmLock);
 	for (auto tbl : requestedLocks) {
-		if(tbl.second == 0) {
+		if(tbl.second == 1) {
 			sem_post(lockMap[tbl.first].sLock);
 			--lockMap[tbl.first].lockCount;
 		}
-		else if(tbl.second == 1) {
+		else if(tbl.second == 0) {
 			sem_post(lockMap[tbl.first].xLock);
 			lockMap[tbl.first].xAcquired = 0;
 		}
