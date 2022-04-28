@@ -205,12 +205,13 @@ condition
 
 %% 
 
-int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond){
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id){
     if(i == 0){
         //create table
         std::string schemaTxt = loadCSV(q[0], stoi(q[1]));
 		std::ofstream outfile;
-		outfile.open("meta_data.db", std::ios_base::app);
+		std::string local = "meta_data_" + std::to_string(client_id) + ".db";
+		outfile.open(local, std::ios_base::app);
 		std::string s = q[0];
 		s = s.substr(0, s.length()-4);
 		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl; 
@@ -244,10 +245,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 
-		int ret = Table_Open(q[1] + ".db", schema, false, &tbl);
+		int ret = Table_Open(q[1] + "_" + std::to_string(client_id) + ".db", schema, false, &tbl);
 		if(ret < 0)
 			std::cout << "Result not available";
-		std::string index_name = q[1] + ".db.0";
+		std::string index_name = q[1] + "_" + std::to_string(client_id) + ".db.0";
 
 		if(insertRow(tbl, schema, q[1], q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0)
 			std::cout << "Invalid insert of row!" << std::endl;
@@ -261,10 +262,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		
-		int ret = Table_Open(q[0] + ".db", schema, false, &tbl);
+		int ret = Table_Open(q[0] + "_" + std::to_string(client_id) + ".db", schema, false, &tbl);
 		if(ret<0)
 			std::cout << "Result not available!" << std::endl;
-		std::string index_name = q[1] + "db.0";
+		std::string index_name = q[1] + "_" + std::to_string(client_id) + "db.0";
 		
 		for(int i=0; i<constr_meta_data[q[1]].size(); i++)
 			if(constr_meta_data[q[1]][i]->constr_name == q[0]){
@@ -273,7 +274,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			}
 		
 		std::ofstream outfile;
-		outfile.open("meta_data.db", std::ios_base::app);
+		std::string local = "meta_data_" + std::to_string(client_id) + ".db";
+		outfile.open(local, std::ios_base::app);
 		outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
 		std::cout << "Added Contraint!" << std::endl;
     }
@@ -345,10 +347,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string schemaTxt = schema_meta_data[q[0]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		
-		int ret = Table_Open(q[0] + ".db", schema, false, &tbl);
+		int ret = Table_Open(q[0] + "_" + std::to_string(client_id) + ".db", schema, false, &tbl);
 		if(ret<0)
 			std::cout << "Result not available!" << std::endl;
-		std::string index_name = q[0] + "db.0";
+		std::string index_name = q[0] + "_" + std::to_string(client_id) + "db.0";
 
 		if(constr_meta_data[q[0]].size() == 0)
 			std::cout << "No constraints exist for this table!" << std::endl;
@@ -385,7 +387,7 @@ int parse_query(std::string input) {
 	delete[] globalInputText;	
 	if(tbl)
 		Table_Close(tbl);
-	executeQuery(qc,q,cols,cond);
+	executeQuery(qc,q,cols,cond,0);
 	q.clear(); cols.clear(); cond.clear();
 	return 1;
 }
