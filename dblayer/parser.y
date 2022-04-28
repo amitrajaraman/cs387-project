@@ -131,7 +131,7 @@ program
 		q.insert(q.end(),{*$3});
 		cols = *$2;
 		table = *$3;
-		lock_type = 0:
+		lock_type = 0;
 	}
 	| DUMP STAR NAME WHERE condition {
 		qc = 7;

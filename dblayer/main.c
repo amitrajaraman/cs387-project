@@ -10,7 +10,7 @@ extern
 int parse_query(std::string s);
 extern std::queue<TransactionInstance*> transaction_queue;
 extern std::string table;
-extern std::string lock_type;
+extern int lock_type;
 extern int qc;
 extern std::vector<std::string> q;
 extern std::vector<std::string> cols;
@@ -49,12 +49,13 @@ void* client(void* d) {
 }
 struct thread_args {
     std::vector<std::string> tables;
-    std::vector<std::string> table_locks;
+    std::vector<int> table_locks;
     std::vector<int> qcs;
-    std::vector<std::vector<std::string> > > qs;
-    std::vector<std::vector<std::string> > > colss;
+    std::vector<std::vector<std::string> > qs;
+    std::vector<std::vector<std::string> > colss;
     std::vector<std::vector<int> > conds;
 };
+
 void* server(void* d) {
     int i = *((int *)d);
     // we don't need this i anywhere though
@@ -75,23 +76,23 @@ void* server(void* d) {
 	            std::vector<int> cond1 = cond;
                 if(table != "") {
                     int found = 0;
-                    for(int j = 0; j < tables.size(); j++) {
-                        if(tables[j] == t) {
+                    for(int j = 0; j < args->tables.size(); j++) {
+                        if(args->tables[j] == t) {
                             found = 1;
-                            if(table_locks[j] > lt) {
-                                table_locks[j] = lt;
+                            if(args->table_locks[j] > lt) {
+                                args->table_locks[j] = lt;
                             }
                         }
                     }
                     if(found == 1) {
-                        args->tables.push(t);
-                        args->table_locks.push(lt);
+                        args->tables.push_back(t);
+                        args->table_locks.push_back(lt);
                     }
                 }
-                args->qcs.push(qc1);
-                args->qs.push(q1);
-                args->colss.push(cols1);
-                args->conds.push(cond1);
+                args->qcs.push_back(qc1);
+                args->qs.push_back(q1);
+                args->colss.push_back(cols1);
+                args->conds.push_back(cond1);
             }
 
 
