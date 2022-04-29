@@ -308,7 +308,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			else
 				std::cout << "Inserted successfully!" << std::endl;
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 5){
         //add constraint
@@ -357,7 +358,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
 			std::cout << "Added Constraint!" << std::endl;
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 6){
         //dump all table_name
@@ -391,7 +393,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			}
 			printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 7){
         //dump all table_name where constraint
@@ -428,7 +431,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 			printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 8){
         //dump col-list table_name
@@ -459,7 +463,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			}
 			printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 9){
         //dump col-list table_name where op num
@@ -493,7 +498,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 			printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
     else if(i == 10){
         //dump constraint name
@@ -540,7 +546,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				}
 			}
 		}
-		Table_Close(tbl);
+		if(tbl)
+			Table_Close(tbl);
     }
 	return 0;
 }
