@@ -206,12 +206,10 @@ void* transaction_final_execution(void* _args) {
 				}
 			}
 			if(f == 1) continue; 
-
-			std::string line;
-			std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
-			std::ofstream out_file(tbl + ".db");
-
 			if(res == 1){
+				std::string line;
+				std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
+				std::ofstream out_file(tbl + ".db");
 				if(ini_file && out_file){
 					while(getline(ini_file,line)){
 						out_file << line << "\n";
@@ -220,14 +218,15 @@ void* transaction_final_execution(void* _args) {
 					//Something went wrong
 					printf("Cannot read File\n");
 				}
+				ini_file.close();
+				out_file.close();
 			}
-			ini_file.close();
-			out_file.close();
 
 			//std:cout << "Copied local table back\n";
 			
 			std::string str = tbl + "_" + std::to_string(client_id) + ".db";
 			int status = remove(str.c_str());
+			std::cout << "Removed " << str << std::endl;
 			if(status!=0)
 				std::cout<<"\nError Occurred in deleting file!\n";
 		}
@@ -235,11 +234,11 @@ void* transaction_final_execution(void* _args) {
 
 	// Update server's metadata if it was modified as well
 	if(copied_meta_data) {
-		std::string line;
-		std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
-		std::ofstream out_file1("meta_data.db");
-
 		if(res == 1){
+			std::string line;
+			std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
+			std::ofstream out_file1("meta_data.db");
+
 			if(ini_file1 && out_file1){
 				while(getline(ini_file1,line)){
 					out_file1 << line << "\n";
@@ -248,9 +247,9 @@ void* transaction_final_execution(void* _args) {
 				//Something went wrong
 				printf("Cannot read File\n");
 			}
+			ini_file1.close();
+			out_file1.close();
 		}
-		ini_file1.close();
-		out_file1.close();
 		//std:cout << "Copied MetaData back\n";
 		std::string str = "meta_data_" + std::to_string(client_id) + ".db";
 		int status = remove(str.c_str());
@@ -262,10 +261,10 @@ void* transaction_final_execution(void* _args) {
 		// std::cout << args->created_tables[i] << std::endl;
 		std::string old_file = args->created_tables[i] + "_" + std::to_string(client_id) + ".db";
 		std::string new_file = args->created_tables[i] + ".db";
-		std::ifstream ini_file1(old_file);
-		std::ofstream out_file1(new_file);
-		std::string line;
-		if(res == 1){
+		if(res == 1) {
+			std::ifstream ini_file1(old_file);
+			std::ofstream out_file1(new_file);
+			std::string line;
 			if(ini_file1 && out_file1){
 				while(getline(ini_file1,line)){
 					out_file1 << line << "\n";
@@ -274,9 +273,9 @@ void* transaction_final_execution(void* _args) {
 				//Something went wrong
 				printf("Cannot read File\n");
 			}
+			ini_file1.close();
+			out_file1.close();
 		}
-		ini_file1.close();
-		out_file1.close();
 		//std:cout << "Copied created table back\n";
 		int status = remove(old_file.c_str());
 		std::cout << "Removed " << old_file << std::endl;
