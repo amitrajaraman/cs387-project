@@ -49,13 +49,13 @@ Table_Get(Table *t, RecId rid, byte *record, int maxlen);
 void
 Table_Close(Table *);
 
-typedef void (*ReadFunc)(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted);
+typedef void (*ReadFunc)(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted, std::string &output);
 
 void
-Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn);
+Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &output);
 
 void
-printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *);
+printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *, std::string &s);
 
 
 #endif

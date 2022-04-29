@@ -9,7 +9,7 @@ extern "C" {
 
 
 void
-printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted) {
+printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted, std::string &output) {
 	Schema *schema = (Schema *) callbackObj;
 	byte *cursor = row;
 
@@ -23,7 +23,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				char tmp[999];
 				DecodeCString(tempCursor,tmp,999);
 				if(i == rowsToBePrinted[rowIndex]) {
-					std::cout << tmp;
+					output += tmp;
 					++rowIndex;
 				}
 				tempCursor = tempCursor + strlen(tmp)+2;
@@ -31,7 +31,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			else if (x == 2) {
 				int out = DecodeInt(tempCursor);
 				if(i == rowsToBePrinted[rowIndex]) {
-					std::cout << out;
+					output += std::to_string(out);
 					++rowIndex;
 				}
 				tempCursor = tempCursor+4;
@@ -39,7 +39,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			else if (x == 3) {
 				long long out = DecodeLong(tempCursor);
 				if(i == rowsToBePrinted[rowIndex]) {
-					std::cout << out;
+					output += std::to_string(out);
 					++rowIndex;
 				}
 				tempCursor = tempCursor+8;
@@ -50,9 +50,9 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			}
 			if(i == rowsToBePrinted[rowIndex-1]) {
 				if(rowIndex == rowsToBePrinted.size())
-					std::cout << std::endl;
+					output += "\n";
 				else
-					std::cout << ",";
+					output += ",";
 			}
 			if(rowIndex >= rowsToBePrinted.size())
 				break;
@@ -61,7 +61,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 }
 	 
 void
-index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList) {
+index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList, std::string &output) {
 	/*
 	Open index ...
 	while (true) {
@@ -95,7 +95,7 @@ index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vect
 		if(next_rid<0) break;                               // ...and break if at end
 		byte record[999];
 		int len = Table_Get(tbl, next_rid, record, 999);    // Get the byte array
-		printRow(schema, next_rid, record, len, rowsToBePrinted);            // print the byte array
+		printRow(schema, next_rid, record, len, rowsToBePrinted, output);            // print the byte array
 	}
 	AM_CloseIndexScan(scan_desc);                           // Finally, close the scan desc at end
 	// ----

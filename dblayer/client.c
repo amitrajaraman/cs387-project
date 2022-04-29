@@ -23,4 +23,5 @@ void TransactionHandler::executeTransaction() {
         pthread_cond_wait(&txn.cond, &txn.lock);
     }
     pthread_mutex_unlock(&txn.lock);
+    
 }

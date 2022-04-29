@@ -237,7 +237,7 @@ Table_Get(Table *tbl, RecId rid, byte *record, int maxlen) {
 }
 
 void
-Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn) {
+Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &output) {
 	std::vector<int> rowsToBePrinted;
 	for (int i = 0; i < tbl->schema->numColumns; ++i)
 		rowsToBePrinted.push_back(i);
@@ -255,7 +255,7 @@ Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn) {
 			int length = getLen(slot, pgbuf);
 			memcpy(record, pgbuf+offset, length);
 			// call the function on the given thing
-			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted);
+			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output);
 		}
 		PF_UnfixPage(fd, pgnum, FALSE);
 		// iterate through the pages one by one
@@ -270,7 +270,7 @@ Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn) {
 }
 
 void
-printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList) {
+printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList, std::string &output) {
 	std::vector<int> rowsToBePrinted;
 	if(colList != NULL) {
 		for (int i = 0; i < colList->size(); ++i) {
@@ -287,8 +287,8 @@ printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std
 			rowsToBePrinted.push_back(i);
 	}
 	for (int i = 0; i < rowsToBePrinted.size()-1; ++i)
-		std::cout << tbl->schema->columns[i]->name << ",";
-	std::cout << tbl->schema->columns[rowsToBePrinted.size()-1]->name << std::endl;
+		output = output + tbl->schema->columns[i]->name + ",";
+	output = output + tbl->schema->columns[rowsToBePrinted.size()-1]->name + "\n";
 	
 	char *pgbuf;
 	int pgnum;
@@ -304,7 +304,7 @@ printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std
 			int length = getLen(slot, pgbuf);
 			memcpy(record, pgbuf+offset, length);
 			// call the function on the given thing
-			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted);
+			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output);
 		}
 		PF_UnfixPage(fd, pgnum, FALSE);
 		// iterate through the pages one by one
