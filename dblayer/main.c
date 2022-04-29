@@ -66,26 +66,27 @@ void* transaction_final_execution(void* _args) {
     struct thread_args *args = (struct thread_args *) _args;
     int client_id = args->txn->client_id;
     int k = lm.getLocks(client_id, args->table_and_locks);
+
+    // copying the metadata file
+    std::string line;
+    std::ifstream ini_file("meta_data.db");
+    std::ofstream out_file("meta_data_" + std::to_string(client_id) + ".db");
+
+    if(ini_file && out_file){
+        while(getline(ini_file,line)){
+            out_file << line << "\n";
+        }        
+    } else {
+        //Something went wrong
+        printf("Cannot read File");
+    }
+    ini_file.close();
+    out_file.close();
+    std::cout << "Meta data copied\n\n";
     // making a local copy of the required tables
     for(int i = 0; i < args->table_and_locks.size(); i++) {
         std::string tbl = args->table_and_locks[i].first;
         int lock_type = args->table_and_locks[i].second;
-
-        std::string line;
-        std::ifstream ini_file("meta_data.db");
-        std::ofstream out_file("meta_data_" + std::to_string(client_id) + ".db");
-    
-        if(ini_file && out_file){
-            while(getline(ini_file,line)){
-                out_file << line << "\n";
-            }        
-        } else {
-            //Something went wrong
-            printf("Cannot read File");
-        }
-        ini_file.close();
-        out_file.close();
-        std::cout << "Meta data copied\n";
 
         if(tbl!="$" && lock_type == 0) {
             // copying tbl.db to tbl_<client_id>.db
@@ -105,45 +106,47 @@ void* transaction_final_execution(void* _args) {
             out_file.close();
             std::cout << "table file copied to " << tbl + "_" + std::to_string(client_id) + ".db" << std::endl;
         }
+    }
        
-        for(int i = 0; i < args->qcs.size(); i++) {
-            executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id);
-            std::cout << "A query was executed completely" << std::endl;
-        }
-        for(int i = 0; i < args->table_and_locks.size(); i++) {
-            if(args->table_and_locks[i].first != "$") {
-                // copy back table_<client_id>.db to table.db
-                std::string line;
-                std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
-                std::ofstream out_file(tbl + ".db");
-            
-                if(ini_file && out_file){
-                    while(getline(ini_file,line)){
-                        out_file << line << "\n";
-                    }        
-                } else {
-                    //Something went wrong
-                    printf("Cannot read File");
-                }
-                ini_file.close();
-                out_file.close();
-            }
-        }
-        // copy back meta_data_<client_id>.db to meta_data.db
-            std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
-            std::ofstream out_file1("meta_data.db");
+    for(int i = 0; i < args->qcs.size(); i++) {
+        executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id);
+        std::cout << "A query was executed completely" << std::endl;
+    }
+
+    for(int i = 0; i < args->table_and_locks.size(); i++) {
+        if(args->table_and_locks[i].first != "$") {
+            // copy back table_<client_id>.db to table.db
+            std::string tbl = args->table_and_locks[i].first;
+            std::string line;
+            std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
+            std::ofstream out_file(tbl + ".db");
         
-            if(ini_file1 && out_file1){
-                while(getline(ini_file1,line)){
-                    out_file1 << line << "\n";
+            if(ini_file && out_file){
+                while(getline(ini_file,line)){
+                    out_file << line << "\n";
                 }        
             } else {
                 //Something went wrong
                 printf("Cannot read File");
             }
-            ini_file1.close();
-            out_file1.close();
+            ini_file.close();
+            out_file.close();
+        }
     }
+    // copy back meta_data_<client_id>.db to meta_data.db
+        std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
+        std::ofstream out_file1("meta_data.db");
+    
+        if(ini_file1 && out_file1){
+            while(getline(ini_file1,line)){
+                out_file1 << line << "\n";
+            }        
+        } else {
+            //Something went wrong
+            printf("Cannot read File");
+        }
+        ini_file1.close();
+        out_file1.close();
     k = lm.releaseLocks(client_id, args->table_and_locks);
     pthread_mutex_lock(&(args->txn->lock));
     args->txn->done = 1;
