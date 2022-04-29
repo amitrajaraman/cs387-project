@@ -1,0 +1,4 @@
+dump all data where gt 4
+dump all data where lt 5
+dump all data
+dump Capital,Population data
