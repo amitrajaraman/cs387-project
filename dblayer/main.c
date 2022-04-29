@@ -316,7 +316,7 @@ void* server(void* d) {
 				int res;
 				parse_query(queries[i], &res);
 				if (res == 0){
-					std::cout << "yeah need to abort" << std::endl;
+					std::cout << "Need to abort!" << std::endl;
 					abort_trans = true;
 				}
 				else{
