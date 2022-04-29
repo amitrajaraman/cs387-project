@@ -171,7 +171,7 @@ void* transaction_final_execution(void* _args) {
 				break;
 			}
 		}
-		//std:cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
+		// std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
 		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table);
 		std::cout << "A query was executed completely" << std::endl;
 	}
@@ -193,7 +193,7 @@ void* transaction_final_execution(void* _args) {
                 }
             }
             if(f == 1) continue; 
-            
+
 			std::string line;
 			std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
 			std::ofstream out_file(tbl + ".db");
