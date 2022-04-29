@@ -1,3 +1,2 @@
 create table file dataa.csv index 2
-domp all dataa
 dump all dataa

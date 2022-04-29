@@ -2,6 +2,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <experimental/filesystem>
@@ -242,6 +243,7 @@ void* transaction_final_execution(void* _args) {
 			//std:cout << "Copied local table back\n";
 			str = tbl + "_" + std::to_string(client_id) + ".db";
 			status = remove(str.c_str());
+			std::cout << "Removed " << str << std::endl;
 			if(status!=0)
 				std::cout<<"\nError Occurred in deleting file!\n";
 		}
@@ -266,6 +268,7 @@ void* transaction_final_execution(void* _args) {
 		//std:cout << "Copied MetaData back\n";
 		std::string str = "meta_data_" + std::to_string(client_id) + ".db";
 		int status = remove(str.c_str());
+		std::cout << "Removed " << str << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
@@ -288,6 +291,7 @@ void* transaction_final_execution(void* _args) {
 		out_file1.close();
 		//std:cout << "Copied created table back\n";
 		int status = remove(old_file.c_str());
+		std::cout << "Removed " << old_file << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 		
@@ -308,6 +312,7 @@ void* transaction_final_execution(void* _args) {
 		out_file2.close();
 		//std:cout << "Copied created table back\n";
 		status = remove(old_file2.c_str());
+		std::cout << "Removed " << old_file2 << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
@@ -323,7 +328,7 @@ void* transaction_final_execution(void* _args) {
 
 void* server(void* d) {
 	int l = *((int *)d);
-	std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
+	std::fstream file2 ("meta_data.db", std::fstream::in | std::fstream::out | std::fstream::app );
 	file2.close();
 	// we don't need this l anywhere though
 

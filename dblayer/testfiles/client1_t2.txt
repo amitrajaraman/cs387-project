@@ -6,4 +6,3 @@ dump all data
 dump Country,Population data
 dump all data where gt 3
 dump Country,Population data where gt 3
-
