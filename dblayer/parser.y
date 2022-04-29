@@ -307,6 +307,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		}
 		else
 			std::cout << "Inserted successfully!" << std::endl;
+		Table_Close(tbl);
     }
     else if(i == 5){
         //add constraint
@@ -348,7 +349,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = "meta_data.db";
 		outfile.open(local, std::ios_base::app);
 		outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
-		std::cout << "Added Contraint!" << std::endl;
+		std::cout << "Added Constraint!" << std::endl;
+		Table_Close(tbl);
     }
     else if(i == 6){
         //dump all table_name
@@ -407,6 +409,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string index_name;
 
 		printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
+		Table_Close(tbl);
     }
     else if(i == 8){
         //dump col-list table_name
@@ -460,6 +463,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 
 		printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
+		Table_Close(tbl);
     }
     else if(i == 10){
         //dump constraint name
@@ -500,6 +504,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
 			}
 		}
+		Table_Close(tbl);
     }
 	return 0;
 }
@@ -531,8 +536,8 @@ int parse_query(std::string input, int *res) {
 		return 0;
 
 	delete[] globalInputText;	
-	if(tbl)
-		Table_Close(tbl);
+	// if(tbl)
+	// 	Table_Close(tbl);
 	return 1;
 }
 

@@ -91,6 +91,9 @@ GLOBAL VARIABLES MODIFIED:
 	PFhashtbl
 *****************************************************************************/
 {
+
+    // printf("HASH INSERT ENTRANCE\n");
+
     int bucket;	/* bucket to insert the page */
     PFhash_entry *entry; /* pointer to new entry */
 
@@ -122,6 +125,9 @@ GLOBAL VARIABLES MODIFIED:
     }
     PFhashtbl[bucket] = entry;
 
+    // printf("HASH INSERT EXIT\n");
+    // PFhashPrint();
+
     return(PFE_OK);
 }
 
@@ -148,13 +154,18 @@ PFhashtbl
     PFhash_entry *entry;	/* entry to look for */
 
     /* find the bucket */
+    // printf("ATTEMPTING TO DELETE FD %d, PAGE %d\n", fd, page);
+    // PFhashPrint();
     bucket = PFhash(fd,page);
+    // printf("BUCKET : %d\n", bucket);
 
     /* See if the entry is in this bucket */
-    for (entry=PFhashtbl[bucket]; entry != NULL; entry = entry->nextentry)
+    for (entry=PFhashtbl[bucket]; entry != NULL; entry = entry->nextentry) {
+        // printf("ENTRY'S FD IS %d AND PAGE IS %d\n", entry->fd, entry->page);
         if (entry->fd == fd && entry->page == page) {
             break;
         }
+    }
 
     if (entry == NULL) {
         /* not found */

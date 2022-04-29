@@ -70,7 +70,6 @@ int getFreePtr(byte *pageBuf) {
 int
 Table_Open(std::string dbname, Schema *schema, bool overwrite, Table **ptable)
 {
-	// UNIMPLEMENTED;
 	PF_Init();
 	FILE *fname = fopen(&dbname[0], "r");
 	if(fname) { // If the file exists...

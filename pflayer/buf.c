@@ -437,7 +437,8 @@ IMPLEMENTATION NOTES:
             bpage->dirty = FALSE;
 
             /* get rid of it from the hash table */
-            if ((error=PFhashDelete(fd,bpage->page))!= PFE_OK) {
+            // printf("FD : %d PAGE : %d\n", fd, bpage->page);
+            if ((error=PFhashDelete(fd,bpage->page)) != PFE_OK) {
                 /* internal error */
                 printf("Internal error:PFbufReleaseFile()\n");
                 int* ptr = NULL;

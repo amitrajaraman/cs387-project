@@ -1,2 +1,2 @@
-dump all datab
-dump all dataa
+dump all data
+dump all data

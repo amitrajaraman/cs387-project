@@ -375,6 +375,9 @@ RETURN VALUE:
 
 *****************************************************************************/
 {
+
+    // printf("ATTEMPTING TO CLOSE FD %d\n", fd);
+
     int error;
 
     if (PFinvalidFd(fd)) {
