@@ -293,11 +293,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			*res = 0;
 		}
 
-		std::string index_name;
-		if(b)
-			index_name = q[1] + "_" + std::to_string(client_id);
-		else 
-			index_name = q[1];
+		std::string index_name = "";
 
 		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
 			std::cout << "Invalid insert of row!" << std::endl;
@@ -331,12 +327,6 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			std::cout << "Result not available!" << std::endl;
 			*res = 0;
 		}
-		std::string index_name;
-
-		if(b)
-			index_name = q[1] + "_" + std::to_string(client_id) + ".db.0";
-		else 
-			index_name = q[1] + ".db.0";
 		
 		for(int i=0; i<constr_meta_data[q[1]].size(); i++)
 			if(constr_meta_data[q[1]][i]->constr_name == q[0]){
@@ -410,15 +400,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		}
 		std::string index_name;
 
-		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
-		else 
-			index_name = q[0] + ".db.0";
-		char *index_name_c = new char[index_name.length() + 1];
-		strcpy(index_name_c, index_name.c_str());
-		int indexFD = PF_OpenFile(index_name_c);
-
-		index_scan(tbl, schema, indexFD, cond[0], cond[1], NULL, output);
+		printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
     }
     else if(i == 8){
         //dump col-list table_name
@@ -470,15 +452,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		}
 		std::string index_name;
 
-		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
-		else 
-			index_name = q[0] + ".db.0";
-		char *index_name_c = new char[index_name.length() + 1];
-		strcpy(index_name_c, index_name.c_str());
-		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, cond[0], cond[1], &col, output);
+		printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
     }
     else if(i == 10){
         //dump constraint name
@@ -512,11 +487,11 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			index_name = q[0] + ".db.0";
 
 		if(constr_meta_data[q[0]].size() == 0)
-			std::cout << "No constraints exist for this table!" << std::endl;
+			output = "No constraints exist for this table!";
 		else{
-			std::cout << "Constraint Name\tCondition" << std::endl;
+			output = output + "Constraint Name\tCondition\n";
 			for(int i=0; i<constr_meta_data[q[0]].size(); i++){
-				std::cout << constr_meta_data[q[0]][i]->constr_name << "\t" << std::endl;
+				output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
 			}
 		}
     }
