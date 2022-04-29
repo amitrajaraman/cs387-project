@@ -21,6 +21,7 @@
 	std::string table = ""; // $ would be a reserved keyword for database
 	std::string created_table = ""; 
 	int lock_type = -1;  // 0 for X-lock and 1 for S-lock
+	int global_stat = 1;
 	std::map<std::string, std::string> schema_meta_data;
 	std::map<std::string, int> index_meta_data;
 	std::map<std::string, std::vector<Constraint*> > constr_meta_data;
@@ -510,7 +511,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 	return 0;
 }
 
-int parse_query(std::string input) {
+int parse_query(std::string input, int *res) {
 
 	//std::cout << "Welcome. Type `help` for help." << std::endl;
 
@@ -528,7 +529,9 @@ int parse_query(std::string input) {
 	}
 	globalInputText[input.size()] = '\0';
 
+	global_stat = 1;
 	yyparse();
+	*(res) = global_stat;
 
 	if(stopFlag)
 		return 0;
@@ -541,6 +544,7 @@ int parse_query(std::string input) {
 
 int yyerror(std::string msg) {
 	fprintf(stderr, "%s\n", msg.c_str());
+	global_stat = 0;
 }
 
 int readInputForLexer( char *buffer, int *numBytesRead, int maxBytesToRead ) {

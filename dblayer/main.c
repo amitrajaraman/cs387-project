@@ -11,7 +11,7 @@
 
 using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
-int parse_query(std::string s);
+int parse_query(std::string s, int *res);
 int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, std::string &s);
 extern std::queue<TransactionInstance*> transaction_queue;
 extern pthread_mutex_t lock;		// Lock for the transaction_queue
@@ -53,7 +53,10 @@ void* client(void* d) {
 			txnh.txn.client_id = i;
 			std::cout << "Client " << i << " attempting to execute Transaction " << t << std::endl;
 			txnh.executeTransaction();
-			std::cout << "Client " << i << " has executed Transaction " << t << std::endl;
+			if(txnh.txn.done ==  1)
+				std::cout << "Client " << i << " has executed Transaction " << t << std::endl;
+			if(txnh.txn.done == -1)
+				std::cout << "Client " << i << " has aborted Transaction " << t << std::endl;
             std::ofstream myfile;
             myfile.open ("client_" + std::to_string(i) + ".output", std::fstream::app);
             myfile << txnh.txn.output;
@@ -334,60 +337,78 @@ void* server(void* d) {
 			TransactionInstance* txn = transaction_queue.front();
 			transaction_queue.pop();
 			pthread_mutex_unlock(&lock);
-
 			std::vector<std::string> queries = txn->queries;  
 
 			struct thread_args *args = new(struct thread_args);
+			bool abort_trans = false;
 
 			// Parse the queries to get information on required locks
 			for(int i = 0; i < queries.size(); i++) {
-				parse_query(queries[i]);
-				std::string t = table;
-				int lt = lock_type;		 // 0: X-Lock, 1: S-Lock, $: Database Locked
-				int qc1 = qc;
-				std::vector<std::string> q1 = q;
-				std::vector<std::string> cols1 = cols;
-				std::vector<int> cond1 = cond;
-				if(created_table != "")
-					args->created_tables.push_back(created_table);
-				qc = -1;
-				q.clear(); cols.clear(); cond.clear();
-				table = "";
-				created_table = "";
-				if(t != "") {
-					int found = 0;
-					for(int j = 0; j < args->table_and_locks.size(); j++) {
-						if(args->table_and_locks[j].first == t) {
-							found = 1;
-							if(args->table_and_locks[j].second > lt) {
-								args->table_and_locks[j].second = lt;
+				int res;
+				parse_query(queries[i], &res);
+				if (res == 0){
+					std::cout << "yeah need to abort" << std::endl;
+					abort_trans = true;
+				}
+				else{
+					std::string t = table;
+					int lt = lock_type;		 // 0: X-Lock, 1: S-Lock, $: Database Locked
+					int qc1 = qc;
+					std::vector<std::string> q1 = q;
+					std::vector<std::string> cols1 = cols;
+					std::vector<int> cond1 = cond;
+					if(created_table != "")
+						args->created_tables.push_back(created_table);
+					qc = -1;
+					q.clear(); cols.clear(); cond.clear();
+					table = "";
+					created_table = "";
+					if(t != "") {
+						int found = 0;
+						for(int j = 0; j < args->table_and_locks.size(); j++) {
+							if(args->table_and_locks[j].first == t) {
+								found = 1;
+								if(args->table_and_locks[j].second > lt) {
+									args->table_and_locks[j].second = lt;
+								}
 							}
 						}
+						if(found == 0) {
+							args->table_and_locks.push_back(std::pair<std::string, int>(t, lt));
+						}
 					}
-					if(found == 0) {
-						args->table_and_locks.push_back(std::pair<std::string, int>(t, lt));
-					}
+					args->tables_original.push_back(t);
+					args->qcs.push_back(qc1);
+					args->qs.push_back(q1);
+					args->colss.push_back(cols1);
+					args->conds.push_back(cond1);
 				}
-				args->tables_original.push_back(t);
-				args->qcs.push_back(qc1);
-				args->qs.push_back(q1);
-				args->colss.push_back(cols1);
-				args->conds.push_back(cond1);
 			}
-			args->txn = txn;
 
-			//std:cout << "transaction parsed" << std::endl;
+			if(!abort_trans){
+				args->txn = txn;
 
-			// Sort the locks required to avoid deadlocking
-			std::sort(args->table_and_locks.begin(), args->table_and_locks.end());
-			
-			//std:cout << "locks sorted" << std::endl;
+				//std:cout << "transaction parsed" << std::endl;
 
-			// Create `transaction_final_execution` thread to execute parsed transactions
-			//std:cout << "spawning final exec thread" << std::endl;
-			pthread_t *p = (pthread_t *)malloc(sizeof(pthread_t));
-			pthread_create(p, NULL, transaction_final_execution, (void *)args);
-			//std:cout << "final exec spawned" << std::endl;
+				// Sort the locks required to avoid deadlocking
+				std::sort(args->table_and_locks.begin(), args->table_and_locks.end());
+				
+				//std:cout << "locks sorted" << std::endl;
+
+				// Create `transaction_final_execution` thread to execute parsed transactions
+				//std:cout << "spawning final exec thread" << std::endl;
+				pthread_t *p = (pthread_t *)malloc(sizeof(pthread_t));
+				pthread_create(p, NULL, transaction_final_execution, (void *)args);
+				//std:cout << "final exec spawned" << std::endl;
+			}
+			// Need to abort the transaction and exit
+			else{
+				std::cout << "Aborting transaction!" << std::endl;
+				pthread_mutex_lock(&(txn->lock));
+				txn->done = -1;
+				pthread_cond_signal(&(txn->cond));
+				pthread_mutex_unlock(&(txn->lock));
+			}
 		}
 		else{
 			pthread_mutex_unlock(&lock);
