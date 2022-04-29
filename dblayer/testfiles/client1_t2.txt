@@ -1,2 +1,3 @@
-create table file data.csv index 2
-dump all data
+insert (A,B,3) into data
+dump Country,Population data where gt 4
+insert (C,D,5) into data

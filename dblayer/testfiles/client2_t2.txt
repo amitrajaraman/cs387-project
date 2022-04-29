@@ -1,2 +1,3 @@
-create table file datac.csv index 2
-dump all datac
+insert (D,E,238) into dataa
+dump Country,Population dataa where gt 500
+insert (F,G,5892) into dataa

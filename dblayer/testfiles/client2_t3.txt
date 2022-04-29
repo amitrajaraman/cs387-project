@@ -1,0 +1,4 @@
+dump all dataa where gt 7
+dump all dataa where lt 2
+dump all dataa
+dump Capital,Population dataa
