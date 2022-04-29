@@ -1,1 +1,4 @@
 create table file data.csv index 2
+dump all data
+insert (A;B;1) into data
+dump all data

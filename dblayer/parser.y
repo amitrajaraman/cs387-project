@@ -278,7 +278,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
-
+		std::cout << "Reached here" << std::endl;
 		if(b)
 			local = q[1] + "_" + std::to_string(client_id) + ".db";
 		else 
