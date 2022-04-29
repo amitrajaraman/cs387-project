@@ -242,7 +242,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		outfile.open(local, std::ios_base::app);
 		std::string s = q[0];
 		s = s.substr(0, s.length()-4);
-		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
+		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
 		std::cout << "Created table!\n";
     }
     else if(i == 1){

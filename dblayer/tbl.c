@@ -286,7 +286,7 @@ printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std
 			rowsToBePrinted.push_back(i);
 	}
 	for (int i = 0; i < rowsToBePrinted.size()-1; ++i)
-		output = output + tbl->schema->columns[i]->name + ",";
+		output = output + tbl->schema->columns[rowsToBePrinted[i]]->name + ",";
 	output = output + tbl->schema->columns[rowsToBePrinted.size()-1]->name + "\n";
 	
 	char *pgbuf;
