@@ -6,6 +6,7 @@
 #include <vector>
 #include <semaphore.h>
 #include <pthread.h>
+#include <iostream>
 
 sem_t* make_semaphore(int);
 

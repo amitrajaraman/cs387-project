@@ -21,16 +21,23 @@ lockManager::lockManager() {
 }
 
 int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> requestedLocks) {
+	std::cout << "in getLocks()" << std::endl;
+	
 	pthread_mutex_lock(&lmLock);
 	std::vector<sem_t*> semVec;
+
+	std::cout << "acquired lm lock()" << std::endl;
+
 	while(dbLockAcquired == 1)
 		pthread_cond_wait(&lmCond, &lmLock);
 	for (auto tbl : requestedLocks) {
 		if(tbl.first == "$") {
+			std::cout << "attempting to acquire db lock" << std::endl;
 			pthread_mutex_lock(&databaseLock);
 			dbLockAcquired = 1;
+			std::cout << "acquired db lock" << std::endl;
 		}
-		else {
+		else if(dbLockAcquired != 1) {
 			if(tbl.second == 1) {
 				while(lockMap[tbl.first].xAcquired != 0)
 					pthread_cond_wait(&lmCond, &lmLock);
@@ -46,16 +53,22 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 				return 1;
 		}
 	}
+	std::cout << "attempting to unlock lm" << std::endl;
 	pthread_mutex_unlock(&lmLock);
+	std::cout << "unlocked lm" << std::endl;
 	return 0;
 }
 
 int lockManager::releaseLocks(int clientId, std::vector<std::pair<std::string,int>> requestedLocks) {
+	std::cout << "release locks" << std::endl;
 	pthread_mutex_lock(&lmLock);
+	std::cout << "acqd lmlock" << std::endl;
 	for (auto tbl : requestedLocks) {
 		if(tbl.first == "$") {
+			std::cout << "attempting to release db lock" << std::endl;
 			pthread_mutex_unlock(&databaseLock);
 			dbLockAcquired = 0;
+			std::cout << "released db lock" << std::endl;
 		}
 		else {
 			if(tbl.second == 1) {

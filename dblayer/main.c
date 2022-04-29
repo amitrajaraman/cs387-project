@@ -50,8 +50,9 @@ void* client(void* d) {
 			}
 			infile.close();
 			txnh.txn.client_id = i;
-			std::cout << "Client " << i << " Executed Transaction\n";
+			std::cout << "Client " << i << " attempting to execute Transaction " << t << std::endl;
 			txnh.executeTransaction();
+			std::cout << "Client " << i << " has executed Transaction " << t << std::endl;
 		}
 	}
 }
@@ -67,10 +68,12 @@ struct thread_args {
 };
 
 void* transaction_final_execution(void* _args) {
-	// std::cout << "Entered Here" << std::endl;
+	std::cout << "in final exec" << std::endl;
 	struct thread_args *args = (struct thread_args *) _args;
 	int client_id = args->txn->client_id;
 	int k = lm.getLocks(client_id, args->table_and_locks);	// Acquire the locks in sorted order
+
+	std::cout << "Client " << client_id  << " in final phase of exec" << std::endl;
 
 	int copied_meta_data = 0;
 	for(int i = 0; i < args->table_and_locks.size(); i++) {
@@ -93,7 +96,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file.close();
 			out_file.close();
-			std::cout << "Meta data copied\n\n";
+			std::cout << "Meta data copied" << std::endl;
 		}
 	}
 
@@ -291,6 +294,8 @@ void* server(void* d) {
 	file2.close();
 	// we don't need this l anywhere though
 
+	std::cout << "Server tread has spawned" << std::endl;
+
 	// The server thread never returns, it keeps checking if new transactions have been added to the queue 
 	while(true) {
 		// If the transaction queue is not empty, get the top-most txn and execute its queries
@@ -341,12 +346,18 @@ void* server(void* d) {
 			}
 			args->txn = txn;
 
+			std::cout << "transaction parsed" << std::endl;
+
 			// Sort the locks required to avoid deadlocking
 			std::sort(args->table_and_locks.begin(), args->table_and_locks.end());
+			
+			std::cout << "locks sorted" << std::endl;
 
 			// Create `transaction_final_execution` thread to execute parsed transactions
+			std::cout << "spawning final exec thread" << std::endl;
 			pthread_t *p = (pthread_t *)malloc(sizeof(pthread_t));
 			pthread_create(p, NULL, transaction_final_execution, (void *)args);
+			std::cout << "final exec spawned" << std::endl;
 		}
 		else{
 			pthread_mutex_unlock(&lock);
