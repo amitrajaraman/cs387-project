@@ -12,7 +12,7 @@ sem_t* make_semaphore(int);
 
 class lockObject {
 public:
-	sem_t *xLock;
+	pthread_mutex_t xLock;
 	sem_t *sLock;
 	int xAcquired;
 	int lockCount;

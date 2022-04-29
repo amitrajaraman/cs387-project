@@ -9,8 +9,8 @@ sem_t* make_semaphore(int value)
 }
 
 lockObject::lockObject() {
-	this->xLock = make_semaphore(1);
-	this->sLock = make_semaphore(-1);
+	this->xLock = PTHREAD_MUTEX_INITIALIZER;
+	this->sLock = make_semaphore(1);
 	this->xAcquired = 0;
 }
 
@@ -46,7 +46,7 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 			else if(tbl.second == 0) {
 				while(lockMap[tbl.first].lockCount > 0)
 					pthread_cond_wait(&lmCond, &lmLock);
-				sem_wait(lockMap[tbl.first].xLock);
+				pthread_mutex_lock(&lockMap[tbl.first].xLock);
 				lockMap[tbl.first].xAcquired = 1;
 			}
 			else
@@ -77,7 +77,7 @@ int lockManager::releaseLocks(int clientId, std::vector<std::pair<std::string,in
 				--lockMap[tbl.first].lockCount;
 			}
 			else if(tbl.second == 0) {
-				sem_post(lockMap[tbl.first].xLock);
+				pthread_mutex_unlock(&lockMap[tbl.first].xLock);
 				lockMap[tbl.first].xAcquired = 0;
 			}
 			else
