@@ -53,11 +53,20 @@ encode(Schema *sch, char **fields, byte *record, int spaceLeft) {
 }
 
 std::string
-loadCSV(std::string file, int index) {
+loadCSV(std::string file, int index, int i = -1) {
 	// Open csv file, parse schema
 	FILE* file_ptr;
-	std::string db_name = file.substr(0, file.length()-4) + ".db";
-	std::string index_name = file.substr(0, file.length()-4) + ".db.0";
+	std::string db_name;
+	std::string index_name;
+	if(i == -1) {
+		// -1 if we want to create data.db and data.db.0
+		db_name = file.substr(0, file.length()-4) + ".db";
+		index_name = file.substr(0, file.length()-4) + ".db.0";
+	} else {
+		// else we create data_<i>.db and data_<i>.db.0
+		db_name = file.substr(0, file.length()-4) + "_" + std::to_string(i) + ".db";
+		index_name = file.substr(0, file.length()-4) + "_" + std::to_string(i) + ".db.0";
+	}
 
 	file_ptr = fopen(&db_name[0], "r");
 	if (file_ptr)

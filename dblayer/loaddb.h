@@ -19,7 +19,7 @@ extern "C" {
 
 #define MAX_PAGE_SIZE 4000
 int encode(Schema *sch, char **fields, byte *record, int spaceLeft);
-std::string loadCSV(std::string file, int index);
+std::string loadCSV(std::string file, int index, int x);
 int insertRow(Table *tbl, Schema *sch, std::string indexName, std::string row, int indexNo, std::vector<Constraint*> constr);
 // int addConstraint(Table *tbl, Schema *sch, std::string constr_name, int op, int val);
 #endif
