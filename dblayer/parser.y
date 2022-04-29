@@ -242,7 +242,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		outfile.open(local, std::ios_base::app);
 		std::string s = q[0];
 		s = s.substr(0, s.length()-4);
-		if(schemaTxt[schemaTxt.length()-1] == '\n')
+		if(schemaTxt[schemaTxt.length()-1] == '\n' || schemaTxt[schemaTxt.length()-1] == '\r')
 			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
 		else
 			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
@@ -282,31 +282,32 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[1]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		if(b)
-			local = q[1] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[1] + ".db";
-		
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret < 0){
-			std::cout << "Result not available" << std::endl;
+		if(schema_meta_data.find(q[1]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
+		else {
+			std::string schemaTxt = schema_meta_data[q[1]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
+			if(b)
+				local = q[1] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[1] + ".db";
+			
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret < 0){
+				std::cout << "Result not available" << std::endl;
+				*res = 0;
+			}
 
-		std::string index_name = "";
-
-		// std::cout << "Reached here" << std::endl;
-		// for (auto const &pair: index_meta_data)
-		// 	std::cout << "{" << pair.first << " : " << pair.second << "}" << std::endl;
-		// std::cout << q[1] << " " << index_meta_data[q[1]] << std::endl;
-		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
-			std::cout << "Invalid insert of row!" << std::endl;
-			*res = 0;
+			std::string index_name = "";
+			if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
+				std::cout << "Invalid insert of row!" << std::endl;
+				*res = 0;
+			}
+			else
+				std::cout << "Inserted successfully!" << std::endl;
 		}
-		else
-			std::cout << "Inserted successfully!" << std::endl;
 		Table_Close(tbl);
     }
     else if(i == 5){
@@ -321,35 +322,41 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[1]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-		
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret<0){
-			std::cout << "Result not available!" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		
-		for(int i=0; i<constr_meta_data[q[1]].size(); i++)
-			if(constr_meta_data[q[1]][i]->constr_name == q[0]){
-				std::cout << "constraint with same name already exists for this table!" << std::endl;
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
+
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
+			
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret<0){
+				std::cout << "Result not available!" << std::endl;
 				*res = 0;
-				return -1;
 			}
-		
-		std::ofstream outfile;
-		if(a)
-			local = "meta_data_" + std::to_string(client_id) + ".db";
-		else 
-			local = "meta_data.db";
-		outfile.open(local, std::ios_base::app);
-		outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
-		std::cout << "Added Constraint!" << std::endl;
+			
+			for(int i=0; i<constr_meta_data[q[1]].size(); i++)
+				if(constr_meta_data[q[1]][i]->constr_name == q[0]){
+					std::cout << "constraint with same name already exists for this table!" << std::endl;
+					*res = 0;
+					return -1;
+				}
+			
+			std::ofstream outfile;
+			if(a)
+				local = "meta_data_" + std::to_string(client_id) + ".db";
+			else 
+				local = "meta_data.db";
+			outfile.open(local, std::ios_base::app);
+			outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
+			std::cout << "Added Constraint!" << std::endl;
+		}
 		Table_Close(tbl);
     }
     else if(i == 6){
@@ -363,21 +370,27 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[0]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-		// std::cout << "inside dump " << local << std::endl;
-		int ret = Table_Open(local, schema, false, &tbl);
-
-		if(ret < 0) {
-			std::cout << "Result not available" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
+
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
+			// std::cout << "inside dump " << local << std::endl;
+			int ret = Table_Open(local, schema, false, &tbl);
+
+			if(ret < 0) {
+				std::cout << "Result not available" << std::endl;
+				*res = 0;
+			}
+			printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
+		}
 		Table_Close(tbl);
     }
     else if(i == 7){
@@ -393,22 +406,28 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[0]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		std::string index_name;
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
 
-		printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
+
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret < 0) {
+				std::cout << "Result not available" << std::endl;
+				*res = 0;
+			}
+			std::string index_name;
+
+			printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
+		}
 		Table_Close(tbl);
     }
     else if(i == 8){
@@ -422,18 +441,24 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[0]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret < 0) {
+				std::cout << "Result not available" << std::endl;
+				*res = 0;
+			}
+			printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
+		}
 		Table_Close(tbl);
     }
     else if(i == 9){
@@ -447,22 +472,27 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[0]];
-
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret < 0) {
-			std::cout << "Result not available" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		std::string index_name;
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
 
+			Schema *schema = parseSchema(&schemaTxt[0]);
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret < 0) {
+				std::cout << "Result not available" << std::endl;
+				*res = 0;
+			}
+			std::string index_name;
 
-		printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
+			printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
+		}
 		Table_Close(tbl);
     }
     else if(i == 10){
@@ -476,32 +506,38 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[0]];
-		Schema *schema = parseSchema(&schemaTxt[0]);
-		
-		if(b)
-			local = q[0] + "_" + std::to_string(client_id) + ".db";
-		else 
-			local = q[0] + ".db";
-
-		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret<0){
-			std::cout << "Result not available!" << std::endl;
+        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
-		std::string index_name;
+		else {
+			std::string schemaTxt = schema_meta_data[q[0]];
+			Schema *schema = parseSchema(&schemaTxt[0]);
+			
+			if(b)
+				local = q[0] + "_" + std::to_string(client_id) + ".db";
+			else 
+				local = q[0] + ".db";
 
-		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
-		else 
-			index_name = q[0] + ".db.0";
+			int ret = Table_Open(local, schema, false, &tbl);
+			if(ret<0){
+				std::cout << "Result not available!" << std::endl;
+				*res = 0;
+			}
+			std::string index_name;
 
-		if(constr_meta_data[q[0]].size() == 0)
-			output = "No constraints exist for this table!";
-		else{
-			output = output + "Constraint Name\tCondition\n";
-			for(int i=0; i<constr_meta_data[q[0]].size(); i++){
-				output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
+			if(b)
+				index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
+			else 
+				index_name = q[0] + ".db.0";
+
+			if(constr_meta_data[q[0]].size() == 0)
+				output = "No constraints exist for this table!";
+			else{
+				output = output + "Constraint Name\tCondition\n";
+				for(int i=0; i<constr_meta_data[q[0]].size(); i++){
+					output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
+				}
 			}
 		}
 		Table_Close(tbl);

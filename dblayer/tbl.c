@@ -132,7 +132,7 @@ Table_Insert(Table *tbl, byte *record, int len, RecId *rid) {
 	int res = PF_GetFirstPage(fd, &pgnum, &pgbuf); // store the first page into pgbuf
 	while(true) {
 		// if we have reached eof (so there is no page at the given position), unfix the old page and allocate a new page
-		if(res == PFE_EOF) {
+		if(res != PFE_OK) {
 			// std::cout << "REACHED EOF!" << std::endl;
 			byte tempBuf[999];
 			PF_UnfixPage(fd, pgnum, TRUE);

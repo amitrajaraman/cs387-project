@@ -175,7 +175,7 @@ void* transaction_final_execution(void* _args) {
 		if(res == 1)
 			std::cout << "A query of " << args->txn->client_id << " was executed completely" << std::endl;
 		else
-			std::cout << "Query execution error!" << std::endl;
+			std::cout << "Query execution error in client " << args->txn->client_id << std::endl;
 	}
 
 	// After the query has executed completely, copy back the modifed database and index from client to the main server
@@ -388,7 +388,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 1;	// Set number of client threads
+	int num_clients = 2;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;
