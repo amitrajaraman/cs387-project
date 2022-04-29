@@ -228,7 +228,7 @@ condition
 %% 
 
 // i is the client_id here
-int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res){
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res, std::string &output){
 	// a is 1 if we are supposed to use local metadata else it is 0, b is 1 if we are supposed to use local table
     if(i == 0){
         //create table data_<i>.db and index file data_<i>.db.o
@@ -251,21 +251,22 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     }
     else if(i == 2){
         //help
-        std::cout << "Implemented commands:\n"
-				"'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n"
-				"'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table"
-				"'dump all <table_name>' to dump all data in the specified table\n"
-				"'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n"
-				"'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n"
-				"'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n"
-				"'add constraint [eq/lt/gt/leq/geq/neq] <num> as <constraint_name> into <table_name>' to add a new constraint which checks all subsequent additions\n"
-				"'help' for help :)\n"
-				"'git' to show the git repository of this project.\n"
-				"'quit' to quit." << std::endl;
+        std::string s1 = "Implemented commands:\n";
+		std::string s2 = "'create table file <file_name> index <col_number>' creates a table from the csv file file_name with the indexing column being the col_number column. The name of the table is the name of the file without the csv extension.\n";
+		std::string s3 = "'insert (<col0>;<col1>;...) into <table_name>' inserts the specified row into the table";
+		std::string s4 = "'dump all <table_name>' to dump all data in the specified table\n";
+		std::string s5 = "'dump all <table_name> where [eq/lt/gt/leq/geq/neq] num' to print all rows in the specified table with indexing row satisfying the given constraint\n";
+		std::string s6 = "'dump <col_list> <table_name>' to dump the named columns in all the rows of the specified table\n";
+		std::string s7 = "'dump <col_list> where [eq/lt/gt/leq/geq/neq] num' to print the named columns from all rows with indexing row satisfying the given constraint\n";
+		std::string s8 = "'add constraint [eq/lt/gt/leq/geq/neq] <num> as <constraint_name> into <table_name>' to add a new constraint which checks all subsequent additions\n";
+		std::string s9 = "'help' for help :)\n";
+		std::string s10 = "'git' to show the git repository of this project.\n";
+		std::string s11 = "'quit' to quit.\n";
+		output = s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10 + s11;
     }
     else if(i == 3){
         //git
-        std::cout << "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!" << std::endl;
+        output = "Head to https://github.com/amitrajaraman/cs387-project/ for the Git repository of this project!\n";
     }
     else if(i == 4){
         //insert
@@ -378,7 +379,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			std::cout << "Result not available" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, NULL);
+		printAllRows(tbl, schema, printRow, NULL, output);
 		Table_Close(tbl);
     }
     else if(i == 7){
@@ -417,7 +418,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, cond[0], cond[1], NULL);
+		index_scan(tbl, schema, indexFD, cond[0], cond[1], NULL, output);
     }
     else if(i == 8){
         //dump col-list table_name
@@ -441,7 +442,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			std::cout << "Result not available" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, &col);
+		printAllRows(tbl, schema, printRow, &col, output);
 		Table_Close(tbl);
     }
     else if(i == 9){
@@ -477,7 +478,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
 
-		index_scan(tbl, schema, indexFD, cond[0], cond[1], &col);
+		index_scan(tbl, schema, indexFD, cond[0], cond[1], &col, output);
     }
     else if(i == 10){
         //dump constraint name

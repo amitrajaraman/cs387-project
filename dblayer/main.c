@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <stdlib.h>
+#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <experimental/filesystem>
@@ -11,7 +13,7 @@
 using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
 int parse_query(std::string s, int *res);
-int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res);
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res, std::string &s);
 extern std::queue<TransactionInstance*> transaction_queue;
 extern pthread_mutex_t lock;		// Lock for the transaction_queue
 extern std::string table;
@@ -55,6 +57,10 @@ void* client(void* d) {
 			txnh.executeTransaction();
 			if(txnh.txn.done == -1)
 				std::cout << "Client " << i << " has aborted Transaction " << t << std::endl;
+            std::ofstream myfile;
+            myfile.open ("client_" + std::to_string(i) + ".output", std::fstream::app);
+            myfile << txnh.txn.output;
+            myfile.close();
 		}
 	}
 }
@@ -80,6 +86,7 @@ void* transaction_final_execution(void* _args) {
 	//std:cout << "Client " << client_id  << " in final phase of exec" << std::endl;
 
 	int copied_meta_data = 0;
+    std::string output = "";
 	for(int i = 0; i < args->table_and_locks.size(); i++) {
 		std::string tbl = args->table_and_locks[i].first;
 
@@ -177,7 +184,9 @@ void* transaction_final_execution(void* _args) {
 		}
 		// std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
 		
-		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res);
+		std::string output_temp;
+		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res, output_temp);
+        output = output + output_temp;
 		if(res == 1)
 			std::cout << "A query was executed completely" << std::endl;
 		else
@@ -246,6 +255,7 @@ void* transaction_final_execution(void* _args) {
 			//std:cout << "Copied local table back\n";
 			str = tbl + "_" + std::to_string(client_id) + ".db";
 			status = remove(str.c_str());
+			std::cout << "Removed " << str << std::endl;
 			if(status!=0)
 				std::cout<<"\nError Occurred in deleting file!\n";
 		
@@ -273,6 +283,7 @@ void* transaction_final_execution(void* _args) {
 		//std:cout << "Copied MetaData back\n";
 		std::string str = "meta_data_" + std::to_string(client_id) + ".db";
 		int status = remove(str.c_str());
+		std::cout << "Removed " << str << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
@@ -297,6 +308,7 @@ void* transaction_final_execution(void* _args) {
 		out_file1.close();
 		//std:cout << "Copied created table back\n";
 		int status = remove(old_file.c_str());
+		std::cout << "Removed " << old_file << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 		
@@ -319,6 +331,7 @@ void* transaction_final_execution(void* _args) {
 		out_file2.close();
 		//std:cout << "Copied created table back\n";
 		status = remove(old_file2.c_str());
+		std::cout << "Removed " << old_file2 << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
@@ -327,6 +340,7 @@ void* transaction_final_execution(void* _args) {
 	k = lm.releaseLocks(client_id, args->table_and_locks);
 	pthread_mutex_lock(&(args->txn->lock));
 	args->txn->done = 1;
+    args->txn->output = output;
 	pthread_cond_signal(&(args->txn->cond));
 	pthread_mutex_unlock(&(args->txn->lock));
 
@@ -339,7 +353,7 @@ void* transaction_final_execution(void* _args) {
 
 void* server(void* d) {
 	int l = *((int *)d);
-	std::fstream file2 ("meta_data.db",  std::fstream::in | std::fstream::out | std::fstream::app );
+	std::fstream file2 ("meta_data.db", std::fstream::in | std::fstream::out | std::fstream::app );
 	file2.close();
 	// we don't need this l anywhere though
 

@@ -1,6 +1,8 @@
 create table file data.csv index 2
 insert (A;B;1) into data
-add constraint gt 4 as const into data
 insert (A;B;5) into data
 insert (A;B;2) into data
 dump all data
+dump Country,Population data
+dump all data where gt 3
+dump Country,Population data where gt 3
