@@ -72,7 +72,7 @@ loadCSV(std::string file, int index, int i = -1) {
 	if (file_ptr)
     {
         fclose(file_ptr);
-    	printf("The Table already exists\n");
+		std::cout << "file already exists" << std::endl;
 		return NULL;
     } 
 

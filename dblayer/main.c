@@ -368,7 +368,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 1;	// Set number of client threads
+	int num_clients = 2;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;
@@ -402,7 +402,7 @@ int main(int argc, char* argv[]) {
 	for (i = 0; i < num_clients; i++)
 	{
 		pthread_join(client_thread[i], NULL);
-		printf("client %d joined\n", i);
+		std::cout << "client " << i+1 << " has joined!" << std::endl;
 	}
 
 	// Join server thread when its function has finished execution
