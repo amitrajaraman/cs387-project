@@ -148,7 +148,14 @@ void* transaction_final_execution(void* _args) {
                 }
             }
         }
-        std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << "Client Id " << client_id << std::endl;
+        for(int j = 0; j < args->created_tables.size(); j++) {
+            std::string tbl = args->created_tables[j];
+            if(tbl == args->tables_original[i]) {
+                copied_table = 1;
+                break;
+            }
+        }
+        std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
         executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table);
         std::cout << "A query was executed completely" << std::endl;
     }

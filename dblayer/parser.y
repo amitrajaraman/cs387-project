@@ -363,6 +363,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + "_" + std::to_string(client_id) + ".db";
 		else 
 			local = q[0] + ".db";
+		std::cout << "inside dump " << local << std::endl;
 		int ret = Table_Open(local, schema, false, &tbl);
 
 		if(ret < 0) {
