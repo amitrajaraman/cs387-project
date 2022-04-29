@@ -1,5 +1,5 @@
 dump all data where gt 4
 dump all data where lt 5
-insert (A,B,3) into data
+insert (A;B;3) into data
 dump Country,Population data where gt 4
-insert (C,D,5) into data
+insert (C;D;5) into data

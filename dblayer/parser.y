@@ -155,7 +155,8 @@ program
 	}
 	| INSERT LEFT_PAR row RIGHT_PAR INTO NAME {
 		qc = 4;
-		q.insert(q.end(),{*$3,*$6});
+		q.push_back(*$6);
+		cols = *$3;
 		table = *$6;
 		lock_type = 0;
 	}
@@ -279,13 +280,13 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-		std::string schemaTxt = schema_meta_data[q[1]];
+		std::string schemaTxt = schema_meta_data[q[0]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
 		std::cout << "Reached here" << std::endl;
 		if(b)
-			local = q[1] + "_" + std::to_string(client_id) + ".db";
+			local = q[0] + "_" + std::to_string(client_id) + ".db";
 		else 
-			local = q[1] + ".db";
+			local = q[0] + ".db";
 		
 		int ret = Table_Open(local, schema, false, &tbl);
 		if(ret < 0){
@@ -295,7 +296,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 		std::string index_name = "";
 
-		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
+		if(insertRow(tbl, schema, index_name, col, index_meta_data[q[0]], constr_meta_data[q[0]]) != 0){
 			std::cout << "Invalid insert of row!" << std::endl;
 			*res = 0;
 		}

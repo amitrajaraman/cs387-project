@@ -6,4 +6,4 @@ cd ../amlayer && make && cd ../dblayer
 cd ../pflayer && make && cd ../dblayer
 make clean && make
 
-gdb ./interface
+./interface

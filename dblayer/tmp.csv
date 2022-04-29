@@ -1,0 +1,21 @@
+Country:varchar,Capital:varchar,Population:int
+Afghanistan,Kabul,35530081
+Albania,Tirana,2930187
+Algeria,Algiers,41318142
+Andorra,Andorra La Vella,76965
+Angola,Luanda,29784193
+Antigua & Barbuda,Saint John's,102012
+Argentina,Buenos Aires,44271041
+Armenia,Yerevan,2930450
+Australia,Canberra,24450561
+Austria,Vienna,8735453
+Azerbaijan,Baku,9827589
+Bahamas,Nassau,395361
+Bahrain,Manama,1492584
+Bangladesh,Dhaka,164669751
+Barbados,Bridgetown,285719
+Belarus,Minsk,9468338
+Belgium,Brussels,11429336
+Belize,Belmopan,374681
+Benin,Porto-Novo,11175692
+Bhutan,Thimphu,807610
