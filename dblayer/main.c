@@ -430,6 +430,8 @@ int main(int argc, char* argv[]) {
 		pthread_join(client_thread[i], NULL);
 		std::cout << "client " << i+1 << " has joined!" << std::endl;
 	}
+	pthread_kill(server_thread[0], SIGKILL);
+	return 0;
 
 	// Join server thread when its function has finished execution
 	// Server thread never joins as it is in a while(true) loop looking for new clients that might come in
