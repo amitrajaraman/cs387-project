@@ -323,7 +323,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
-        if(schema_meta_data.find(q[0]) == schema_meta_data.end()) {
+        if(schema_meta_data.find(q[1]) == schema_meta_data.end()) {
 			std::cout << "File doesn't exist!" << std::endl;
 			*res = 0;
 		}
@@ -332,9 +332,9 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			Schema *schema = parseSchema(&schemaTxt[0]);
 
 			if(b)
-				local = q[0] + "_" + std::to_string(client_id) + ".db";
+				local = q[1] + "_" + std::to_string(client_id) + ".db";
 			else 
-				local = q[0] + ".db";
+				local = q[1] + ".db";
 			
 			int ret = Table_Open(local, schema, false, &tbl);
 			if(ret<0){
