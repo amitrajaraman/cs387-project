@@ -143,22 +143,6 @@ void* transaction_final_execution(void* _args) {
 			ini_file.close();
 			out_file.close();
 			//std:cout << "Table file copied to " << tbl + "_" + std::to_string(client_id) + ".db" << std::endl;
-
-			// Similarly make a copy fo the index file too
-			std::ifstream ini_file2(tbl + ".db.0");
-			std::ofstream out_file2(tbl + "_" + std::to_string(client_id) + ".db.0");
-		
-			if(ini_file2 && out_file2){
-				while(getline(ini_file2,line)){
-					out_file2 << line << "\n";
-				}		
-			} else {
-				//Something went wrong
-				printf("Cannot read File\n");
-			}
-			ini_file2.close();
-			out_file2.close();
-			//std:cout << "Index file copied to " << tbl + "_" + std::to_string(client_id) + ".db.0" << std::endl;
 		}
 	}
 	   
@@ -234,31 +218,6 @@ void* transaction_final_execution(void* _args) {
 			int status = remove(str.c_str());
 			if(status!=0)
 				std::cout<<"\nError Occurred in deleting file!\n";
-
-			// copy back index file
-			std::ifstream ini_file1(tbl + "_" + std::to_string(client_id) + ".db.0");
-			std::ofstream out_file1(tbl + ".db.0");
-		
-			if(res == 0){
-				if(ini_file1 && out_file1){
-					while(getline(ini_file1,line)){
-						out_file1 << line << "\n";
-					}		
-				} else {
-					//Something went wrong
-					printf("Cannot read File\n");
-				}
-			}
-
-			ini_file1.close();
-			out_file1.close();
-			//std:cout << "Copied local table back\n";
-			str = tbl + "_" + std::to_string(client_id) + ".db";
-			status = remove(str.c_str());
-			std::cout << "Removed " << str << std::endl;
-			if(status!=0)
-				std::cout<<"\nError Occurred in deleting file!\n";
-		
 		}
 	}
 
@@ -309,29 +268,6 @@ void* transaction_final_execution(void* _args) {
 		//std:cout << "Copied created table back\n";
 		int status = remove(old_file.c_str());
 		std::cout << "Removed " << old_file << std::endl;
-		if(status!=0)
-			std::cout<<"\nError Occurred in deleting file!\n";
-		
-		// copy index file back
-		std::string old_file2 = args->created_tables[i] + "_" + std::to_string(client_id) + ".db.0";
-		std::string new_file2 = args->created_tables[i] + ".db.0";
-		std::ifstream ini_file2(old_file2);
-		std::ofstream out_file2(new_file2);
-		if(res == 1){
-			if(ini_file2 && out_file2){
-				while(getline(ini_file2,line)){
-					out_file2 << line << "\n";
-				}		
-			} else {
-				//Something went wrong
-				printf("Cannot read File\n");
-			}
-		}
-		ini_file2.close();
-		out_file2.close();
-		//std:cout << "Copied created table back\n";
-		status = remove(old_file2.c_str());
-		std::cout << "Removed " << old_file2 << std::endl;
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
