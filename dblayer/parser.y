@@ -279,7 +279,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
-
+		std::cout << "Reached here" << std::endl;
 		if(b)
 			local = q[1] + "_" + std::to_string(client_id) + ".db";
 		else 
@@ -327,9 +327,9 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string index_name;
 
 		if(b)
-			index_name = q[1] + "_" + std::to_string(client_id) + "db.0";
+			index_name = q[1] + "_" + std::to_string(client_id) + ".db.0";
 		else 
-			index_name = q[1] + "db.0";
+			index_name = q[1] + ".db.0";
 		
 		for(int i=0; i<constr_meta_data[q[1]].size(); i++)
 			if(constr_meta_data[q[1]][i]->constr_name == q[0]){
@@ -387,7 +387,6 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = "meta_data.db";
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
 		std::string schemaTxt = schema_meta_data[q[0]];
-
 		Schema *schema = parseSchema(&schemaTxt[0]);
 
 		if(b)
@@ -402,9 +401,9 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string index_name;
 
 		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + "db.0";
+			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
 		else 
-			index_name = q[0] + "db.0";
+			index_name = q[0] + ".db.0";
 		char *index_name_c = new char[index_name.length() + 1];
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
@@ -460,9 +459,9 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string index_name;
 
 		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + "db.0";
+			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
 		else 
-			index_name = q[0] + "db.0";
+			index_name = q[0] + ".db.0";
 		char *index_name_c = new char[index_name.length() + 1];
 		strcpy(index_name_c, index_name.c_str());
 		int indexFD = PF_OpenFile(index_name_c);
@@ -495,9 +494,9 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		std::string index_name;
 
 		if(b)
-			index_name = q[0] + "_" + std::to_string(client_id) + "db.0";
+			index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
 		else 
-			index_name = q[0] + "db.0";
+			index_name = q[0] + ".db.0";
 
 		if(constr_meta_data[q[0]].size() == 0)
 			std::cout << "No constraints exist for this table!" << std::endl;

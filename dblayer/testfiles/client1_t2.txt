@@ -1,1 +1,6 @@
 create table file data.csv index 2
+insert (A;B;1) into data
+add constraint gt 4 as const into data
+insert (A;B;5) into data
+insert (A;B;2) into data
+dump all data

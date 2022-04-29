@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include "lockManager.h"
 #include "client.h"
-	
+
 using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
 int parse_query(std::string s, int *res);
@@ -109,6 +109,16 @@ void* transaction_final_execution(void* _args) {
 		int lock_type = args->table_and_locks[i].second;
 
 		if(tbl!="$" && lock_type == 0) {
+            //if the table will be created in the same transaction then do not create a copy
+            int f = 0;
+            for(int j = 0; j < args->created_tables.size(); j++) {
+                std::string tbl1 = args->created_tables[j];
+                if(tbl1 == tbl) {
+                    f = 1;
+                    break;
+                }
+            }
+            if(f == 1) continue; 
 			// Make a client's copy of a table when its X-lock has been acquired
 			std::string line;
 			std::ifstream ini_file(tbl + ".db");
@@ -164,9 +174,9 @@ void* transaction_final_execution(void* _args) {
 				break;
 			}
 		}
-		//std:cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
+		// std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
 		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table);
-		//std:cout << "A query was executed completely" << std::endl;
+		std::cout << "A query was executed completely" << std::endl;
 	}
 
 	// After the query has executed completely, copy back the modifed database and index from client to the main server
@@ -176,6 +186,17 @@ void* transaction_final_execution(void* _args) {
 
 		if(tbl!="$" && lock_type == 0) {
 			// copy back table_<client_id>.db to table.db
+            // do not copy here if it was also a created table in the same transaction
+            int f = 0;
+            for(int j = 0; j < args->created_tables.size(); j++) {
+                std::string tbl1 = args->created_tables[j];
+                if(tbl1 == tbl) {
+                    f = 1;
+                    break;
+                }
+            }
+            if(f == 1) continue; 
+
 			std::string line;
 			std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
 			std::ofstream out_file(tbl + ".db");
