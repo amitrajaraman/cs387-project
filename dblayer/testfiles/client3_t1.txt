@@ -1,0 +1,2 @@
+create table file datab.csv index 2
+dump all datab
