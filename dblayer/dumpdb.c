@@ -17,36 +17,30 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 	int rowIndex = 0;
 	while(rowIndex < rowsToBePrinted.size()) {
 		byte *tempCursor = cursor;
-		for (int i = 0; schema->numColumns; ++i) {
-			int x = schema->columns[rowsToBePrinted[i]]->type;
+		for (int i = 0; i < schema->numColumns; ++i) {
+			int x = schema->columns[i]->type;
 			if (x == 1) {
 				char tmp[999];
-				DecodeCString(cursor,tmp,999);
+				DecodeCString(tempCursor,tmp,999);
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << tmp;
 					++rowIndex;
-					if(rowIndex >= rowsToBePrinted.size())
-						break;
 				}
 				tempCursor = tempCursor + strlen(tmp)+2;
 			}
 			else if (x == 2) {
-				int out = DecodeInt(cursor);
+				int out = DecodeInt(tempCursor);
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
-					if(rowIndex >= rowsToBePrinted.size())
-						break;
 				}
 				tempCursor = tempCursor+4;
 			}
 			else if (x == 3) {
-				long long out = DecodeLong(cursor);
+				long long out = DecodeLong(tempCursor);
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
-					if(rowIndex >= rowsToBePrinted.size())
-						break;
 				}
 				tempCursor = tempCursor+8;
 			}
@@ -54,10 +48,14 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				fprintf(stderr, "Schema column type unknown, custom error!\n");
 				exit(EXIT_FAILURE);
 			}
-			if(i == rowsToBePrinted.size()-1)
-				std::cout << std::endl;
-			else
-				std::cout << ",";
+			if(i == rowsToBePrinted[rowIndex-1]) {
+				if(rowIndex == rowsToBePrinted.size())
+					std::cout << std::endl;
+				else
+					std::cout << ",";
+			}
+			if(rowIndex >= rowsToBePrinted.size())
+				break;
 		}
 	}
 }
