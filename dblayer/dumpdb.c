@@ -25,7 +25,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << tmp;
 					++rowIndex;
-					if(j == rowsToBePrinted.size()-1)
+					if(rowIndex == rowsToBePrinted.size()-1)
 						std::cout << std::endl;
 					else
 						std::cout << ",";
@@ -39,7 +39,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
-					if(j == rowsToBePrinted.size()-1)
+					if(rowIndex == rowsToBePrinted.size()-1)
 						std::cout << std::endl;
 					else
 						std::cout << ",";
@@ -53,7 +53,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
-					if(j == rowsToBePrinted.size())
+					if(rowIndex == rowsToBePrinted.size())
 						std::cout << std::endl;
 					else
 						std::cout << ",";
