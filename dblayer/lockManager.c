@@ -46,7 +46,8 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 		if(tbl.second == 1) {
 			while(lockMap[tbl.first].xAcquired != 0)
 				pthread_cond_wait(&lmCond, &lmLock);
-			sem_wait(lockMap[tbl.first].sLock);
+			sem_post(lockMap[tbl.first].sLock);
+			++lockMap[tbl.first].lockCount;
 			std::cout << "Acquired slock of " << tbl.first << std::endl;
 		}
 		else if(tbl.second == 0) {
@@ -80,7 +81,7 @@ int lockManager::releaseLocks(int clientId, std::vector<std::pair<std::string,in
 	}
 	for (auto tbl : requestedLocks) {
 		if(tbl.second == 1) {
-			sem_post(lockMap[tbl.first].sLock);
+			sem_wait(lockMap[tbl.first].sLock);
 			--lockMap[tbl.first].lockCount;
 			std::cout << "Released slock of " << tbl.first << std::endl;
 		}
