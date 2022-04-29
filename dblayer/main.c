@@ -11,7 +11,7 @@
 using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
 int parse_query(std::string s, int *res);
-int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b);
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res);
 extern std::queue<TransactionInstance*> transaction_queue;
 extern pthread_mutex_t lock;		// Lock for the transaction_queue
 extern std::string table;
@@ -50,10 +50,9 @@ void* client(void* d) {
 			}
 			infile.close();
 			txnh.txn.client_id = i;
+			txnh.txn.trans_id  = t;
 			std::cout << "Client " << i << " attempting to execute Transaction " << t << std::endl;
 			txnh.executeTransaction();
-			if(txnh.txn.done ==  1)
-				std::cout << "Client " << i << " has executed Transaction " << t << std::endl;
 			if(txnh.txn.done == -1)
 				std::cout << "Client " << i << " has aborted Transaction " << t << std::endl;
 		}
@@ -74,7 +73,9 @@ void* transaction_final_execution(void* _args) {
 	//std:cout << "in final exec" << std::endl;
 	struct thread_args *args = (struct thread_args *) _args;
 	int client_id = args->txn->client_id;
+	int trans_id = args->txn->trans_id;
 	int k = lm.getLocks(client_id, args->table_and_locks);	// Acquire the locks in sorted order
+	int res=1;
 
 	//std:cout << "Client " << client_id  << " in final phase of exec" << std::endl;
 
@@ -175,8 +176,12 @@ void* transaction_final_execution(void* _args) {
 			}
 		}
 		// std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
-		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table);
-		std::cout << "A query was executed completely" << std::endl;
+		
+		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res);
+		if(res == 1)
+			std::cout << "A query was executed completely" << std::endl;
+		else
+			std::cout << "Query execution error!" << std::endl;
 	}
 
 	// After the query has executed completely, copy back the modifed database and index from client to the main server
@@ -186,32 +191,36 @@ void* transaction_final_execution(void* _args) {
 
 		if(tbl!="$" && lock_type == 0) {
 			// copy back table_<client_id>.db to table.db
-            // do not copy here if it was also a created table in the same transaction
-            int f = 0;
-            for(int j = 0; j < args->created_tables.size(); j++) {
-                std::string tbl1 = args->created_tables[j];
-                if(tbl1 == tbl) {
-                    f = 1;
-                    break;
-                }
-            }
-            if(f == 1) continue; 
+			// do not copy here if it was also a created table in the same transaction
+			int f = 0;
+			for(int j = 0; j < args->created_tables.size(); j++) {
+				std::string tbl1 = args->created_tables[j];
+				if(tbl1 == tbl) {
+					f = 1;
+					break;
+				}
+			}
+			if(f == 1) continue; 
 
 			std::string line;
 			std::ifstream ini_file(tbl + "_" + std::to_string(client_id) + ".db");
 			std::ofstream out_file(tbl + ".db");
-		
-			if(ini_file && out_file){
-				while(getline(ini_file,line)){
-					out_file << line << "\n";
-				}		
-			} else {
-				//Something went wrong
-				printf("Cannot read File\n");
+
+			if(res == 1){
+				if(ini_file && out_file){
+					while(getline(ini_file,line)){
+						out_file << line << "\n";
+					}		
+				} else {
+					//Something went wrong
+					printf("Cannot read File\n");
+				}
 			}
 			ini_file.close();
 			out_file.close();
+
 			//std:cout << "Copied local table back\n";
+			
 			std::string str = tbl + "_" + std::to_string(client_id) + ".db";
 			int status = remove(str.c_str());
 			if(status!=0)
@@ -221,14 +230,17 @@ void* transaction_final_execution(void* _args) {
 			std::ifstream ini_file1(tbl + "_" + std::to_string(client_id) + ".db.0");
 			std::ofstream out_file1(tbl + ".db.0");
 		
-			if(ini_file1 && out_file1){
-				while(getline(ini_file1,line)){
-					out_file1 << line << "\n";
-				}		
-			} else {
-				//Something went wrong
-				printf("Cannot read File\n");
+			if(res == 0){
+				if(ini_file1 && out_file1){
+					while(getline(ini_file1,line)){
+						out_file1 << line << "\n";
+					}		
+				} else {
+					//Something went wrong
+					printf("Cannot read File\n");
+				}
 			}
+
 			ini_file1.close();
 			out_file1.close();
 			//std:cout << "Copied local table back\n";
@@ -236,6 +248,7 @@ void* transaction_final_execution(void* _args) {
 			status = remove(str.c_str());
 			if(status!=0)
 				std::cout<<"\nError Occurred in deleting file!\n";
+		
 		}
 	}
 
@@ -245,13 +258,15 @@ void* transaction_final_execution(void* _args) {
 		std::ifstream ini_file1("meta_data_" + std::to_string(client_id) + ".db");
 		std::ofstream out_file1("meta_data.db");
 
-		if(ini_file1 && out_file1){
-			while(getline(ini_file1,line)){
-				out_file1 << line << "\n";
-			}		
-		} else {
-			//Something went wrong
-			printf("Cannot read File\n");
+		if(res == 1){
+			if(ini_file1 && out_file1){
+				while(getline(ini_file1,line)){
+					out_file1 << line << "\n";
+				}		
+			} else {
+				//Something went wrong
+				printf("Cannot read File\n");
+			}
 		}
 		ini_file1.close();
 		out_file1.close();
@@ -268,13 +283,15 @@ void* transaction_final_execution(void* _args) {
 		std::ifstream ini_file1(old_file);
 		std::ofstream out_file1(new_file);
 		std::string line;
-		if(ini_file1 && out_file1){
-			while(getline(ini_file1,line)){
-				out_file1 << line << "\n";
-			}		
-		} else {
-			//Something went wrong
-			printf("Cannot read File\n");
+		if(res == 1){
+			if(ini_file1 && out_file1){
+				while(getline(ini_file1,line)){
+					out_file1 << line << "\n";
+				}		
+			} else {
+				//Something went wrong
+				printf("Cannot read File\n");
+			}
 		}
 		ini_file1.close();
 		out_file1.close();
@@ -288,13 +305,15 @@ void* transaction_final_execution(void* _args) {
 		std::string new_file2 = args->created_tables[i] + ".db.0";
 		std::ifstream ini_file2(old_file2);
 		std::ofstream out_file2(new_file2);
-		if(ini_file2 && out_file2){
-			while(getline(ini_file2,line)){
-				out_file2 << line << "\n";
-			}		
-		} else {
-			//Something went wrong
-			printf("Cannot read File\n");
+		if(res == 1){
+			if(ini_file2 && out_file2){
+				while(getline(ini_file2,line)){
+					out_file2 << line << "\n";
+				}		
+			} else {
+				//Something went wrong
+				printf("Cannot read File\n");
+			}
 		}
 		ini_file2.close();
 		out_file2.close();
@@ -310,6 +329,12 @@ void* transaction_final_execution(void* _args) {
 	args->txn->done = 1;
 	pthread_cond_signal(&(args->txn->cond));
 	pthread_mutex_unlock(&(args->txn->lock));
+
+	if(res == 1)
+		std::cout << "Client " << client_id << " has finished transaction " << trans_id << std::endl;
+	else
+		std::cout << "Client " << client_id << " has aborted transaction " << trans_id << std::endl;
+		
 }
 
 void* server(void* d) {

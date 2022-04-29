@@ -16,6 +16,7 @@ class TransactionInstance {
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int client_id;
+    int trans_id;
     TransactionInstance();
 };
 

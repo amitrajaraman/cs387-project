@@ -12,6 +12,7 @@
 	extern int counting;
 	int stopFlag = 0;
 	int qc = -1;
+	int *glbl_res;
 	Schema* schema;
 
 	extern struct tokens token_table[1000];
@@ -227,7 +228,7 @@ condition
 %% 
 
 // i is the client_id here
-int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b){
+int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res){
 	// a is 1 if we are supposed to use local metadata else it is 0, b is 1 if we are supposed to use local table
     if(i == 0){
         //create table data_<i>.db and index file data_<i>.db.o
@@ -286,8 +287,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[1] + ".db";
 		
 		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret < 0)
-			std::cout << "Result not available";
+		if(ret < 0){
+			std::cout << "Result not available" << std::endl;
+			*res = 0;
+		}
 
 		std::string index_name;
 		if(b)
@@ -295,8 +298,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		else 
 			index_name = q[1];
 
-		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0)
+		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
 			std::cout << "Invalid insert of row!" << std::endl;
+			*res = 0;
+		}
 		else
 			std::cout << "Inserted successfully!" << std::endl;
     }
@@ -321,9 +326,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + ".db";
 		
 		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret<0)
+		if(ret<0){
 			std::cout << "Result not available!" << std::endl;
-		
+			*res = 0;
+		}
 		std::string index_name;
 
 		if(b)
@@ -334,6 +340,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		for(int i=0; i<constr_meta_data[q[1]].size(); i++)
 			if(constr_meta_data[q[1]][i]->constr_name == q[0]){
 				std::cout << "constraint with same name already exists for this table!" << std::endl;
+				*res = 0;
 				return -1;
 			}
 		
@@ -368,7 +375,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		int ret = Table_Open(local, schema, false, &tbl);
 
 		if(ret < 0) {
-			std::cout << "Result not available";
+			std::cout << "Result not available" << std::endl;
+			*res = 0;
 		}
 		printAllRows(tbl, schema, printRow, NULL);
 		Table_Close(tbl);
@@ -396,7 +404,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 		int ret = Table_Open(local, schema, false, &tbl);
 		if(ret < 0) {
-			std::cout << "Result not available";
+			std::cout << "Result not available" << std::endl;
+			*res = 0;
 		}
 		std::string index_name;
 
@@ -429,7 +438,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + ".db";
 		int ret = Table_Open(local, schema, false, &tbl);
 		if(ret < 0) {
-			std::cout << "Result not available";
+			std::cout << "Result not available" << std::endl;
+			*res = 0;
 		}
 		printAllRows(tbl, schema, printRow, &col);
 		Table_Close(tbl);
@@ -454,7 +464,8 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + ".db";
 		int ret = Table_Open(local, schema, false, &tbl);
 		if(ret < 0) {
-			std::cout << "Result not available";
+			std::cout << "Result not available" << std::endl;
+			*res = 0;
 		}
 		std::string index_name;
 
@@ -488,9 +499,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + ".db";
 
 		int ret = Table_Open(local, schema, false, &tbl);
-		if(ret<0)
+		if(ret<0){
 			std::cout << "Result not available!" << std::endl;
-		
+			*res = 0;
+		}
 		std::string index_name;
 
 		if(b)
@@ -530,6 +542,7 @@ int parse_query(std::string input, int *res) {
 
 	global_stat = 1;
 	yyparse();
+	std::cout << "after yyparse, get value: " << global_stat << std::endl;
 	*(res) = global_stat;
 
 	if(stopFlag)
