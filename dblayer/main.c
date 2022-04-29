@@ -37,31 +37,36 @@ void* client(void* d) {
 	int i = *((int *)d);
 	// scan all the transactions from the files 
 	std::string path = "./testfiles";
+	int t_max = 0;
 	for (const auto &file : directory_iterator(path)) {
 		int c, t;
 		getCandT(file.path(), c, t);
 		if(c == i) {
-			TransactionHandler txnh;
-			std::fstream infile;
-			infile.open(file.path(), std::ios::in);
-			if(infile.is_open()) {
-				std::string line;
-				while(getline(infile, line)) {
-					txnh.addQuery(line);
-				}
-			}
-			infile.close();
-			txnh.txn.client_id = i;
-			txnh.txn.trans_id  = t;
-			std::cout << "Client " << i << " attempting to execute Transaction " << t << std::endl;
-			txnh.executeTransaction();
-			if(txnh.txn.done == -1)
-				std::cout << "Client " << i << " has aborted Transaction " << t << std::endl;
-            std::ofstream myfile;
-            myfile.open ("client_" + std::to_string(i) + ".output", std::fstream::app);
-            myfile << txnh.txn.output;
-            myfile.close();
+			t_max = (t > t_max) ? t : t_max;
 		}
+	}
+	for(int j = 1; j <= t_max; j++) {
+		TransactionHandler txnh;
+		std::string f = "./testfiles/client" + std::to_string(i) + "_t" + std::to_string(j) + ".txt"; 
+		std::fstream infile;
+		infile.open(f, std::ios::in);
+		if(infile.is_open()) {
+			std::string line;
+			while(getline(infile, line)) {
+				txnh.addQuery(line);
+			}
+		}
+		infile.close();
+		txnh.txn.client_id = i;
+		txnh.txn.trans_id  = j;
+		std::cout << "Client " << i << " attempting to execute Transaction " << j << std::endl;
+		txnh.executeTransaction();
+		if(txnh.txn.done == -1)
+			std::cout << "Client " << i << " has aborted Transaction " << j << std::endl;
+		std::ofstream myfile;
+		myfile.open ("client_" + std::to_string(i) + ".output", std::fstream::app);
+		myfile << txnh.txn.output;
+		myfile.close();
 	}
 	return NULL;
 }
@@ -394,7 +399,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 2;	// Set number of client threads
+	int num_clients = 1;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;
