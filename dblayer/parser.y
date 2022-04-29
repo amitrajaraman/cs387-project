@@ -242,7 +242,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 		outfile.open(local, std::ios_base::app);
 		std::string s = q[0];
 		s = s.substr(0, s.length()-4);
-		outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
+		if(schemaTxt[schemaTxt.length()-1] == '\n')
+			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
+		else
+			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
 		std::cout << "Created table!\n";
     }
     else if(i == 1){
@@ -281,7 +284,6 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
         load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
 		std::string schemaTxt = schema_meta_data[q[1]];
 		Schema *schema = parseSchema(&schemaTxt[0]);
-		std::cout << "Reached here" << std::endl;
 		if(b)
 			local = q[1] + "_" + std::to_string(client_id) + ".db";
 		else 
@@ -295,6 +297,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 
 		std::string index_name = "";
 
+		// std::cout << "Reached here" << std::endl;
+		// for (auto const &pair: index_meta_data)
+		// 	std::cout << "{" << pair.first << " : " << pair.second << "}" << std::endl;
+		// std::cout << q[1] << " " << index_meta_data[q[1]] << std::endl;
 		if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
 			std::cout << "Invalid insert of row!" << std::endl;
 			*res = 0;
