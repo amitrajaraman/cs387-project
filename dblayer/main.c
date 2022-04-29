@@ -68,12 +68,12 @@ struct thread_args {
 };
 
 void* transaction_final_execution(void* _args) {
-	std::cout << "in final exec" << std::endl;
+	//std:cout << "in final exec" << std::endl;
 	struct thread_args *args = (struct thread_args *) _args;
 	int client_id = args->txn->client_id;
 	int k = lm.getLocks(client_id, args->table_and_locks);	// Acquire the locks in sorted order
 
-	std::cout << "Client " << client_id  << " in final phase of exec" << std::endl;
+	//std:cout << "Client " << client_id  << " in final phase of exec" << std::endl;
 
 	int copied_meta_data = 0;
 	for(int i = 0; i < args->table_and_locks.size(); i++) {
@@ -96,7 +96,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file.close();
 			out_file.close();
-			std::cout << "Meta data copied" << std::endl;
+			//std:cout << "Meta data copied" << std::endl;
 		}
 	}
 
@@ -121,7 +121,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file.close();
 			out_file.close();
-			std::cout << "Table file copied to " << tbl + "_" + std::to_string(client_id) + ".db" << std::endl;
+			//std:cout << "Table file copied to " << tbl + "_" + std::to_string(client_id) + ".db" << std::endl;
 
 			// Similarly make a copy fo the index file too
 			std::ifstream ini_file2(tbl + ".db.0");
@@ -137,7 +137,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file2.close();
 			out_file2.close();
-			std::cout << "Index file copied to " << tbl + "_" + std::to_string(client_id) + ".db.0" << std::endl;
+			//std:cout << "Index file copied to " << tbl + "_" + std::to_string(client_id) + ".db.0" << std::endl;
 		}
 	}
 	   
@@ -161,9 +161,9 @@ void* transaction_final_execution(void* _args) {
 				break;
 			}
 		}
-		std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
+		//std:cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
 		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table);
-		std::cout << "A query was executed completely" << std::endl;
+		//std:cout << "A query was executed completely" << std::endl;
 	}
 
 	// After the query has executed completely, copy back the modifed database and index from client to the main server
@@ -187,7 +187,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file.close();
 			out_file.close();
-			std::cout << "Copied local table back\n";
+			//std:cout << "Copied local table back\n";
 			std::string str = tbl + "_" + std::to_string(client_id) + ".db";
 			int status = remove(str.c_str());
 			if(status!=0)
@@ -207,7 +207,7 @@ void* transaction_final_execution(void* _args) {
 			}
 			ini_file1.close();
 			out_file1.close();
-			std::cout << "Copied local table back\n";
+			//std:cout << "Copied local table back\n";
 			str = tbl + "_" + std::to_string(client_id) + ".db";
 			status = remove(str.c_str());
 			if(status!=0)
@@ -231,7 +231,7 @@ void* transaction_final_execution(void* _args) {
 		}
 		ini_file1.close();
 		out_file1.close();
-		std::cout << "Copied MetaData back\n";
+		//std:cout << "Copied MetaData back\n";
 		std::string str = "meta_data_" + std::to_string(client_id) + ".db";
 		int status = remove(str.c_str());
 		if(status!=0)
@@ -254,7 +254,7 @@ void* transaction_final_execution(void* _args) {
 		}
 		ini_file1.close();
 		out_file1.close();
-		std::cout << "Copied created table back\n";
+		//std:cout << "Copied created table back\n";
 		int status = remove(old_file.c_str());
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
@@ -274,7 +274,7 @@ void* transaction_final_execution(void* _args) {
 		}
 		ini_file2.close();
 		out_file2.close();
-		std::cout << "Copied created table back\n";
+		//std:cout << "Copied created table back\n";
 		status = remove(old_file2.c_str());
 		if(status!=0)
 			std::cout<<"\nError Occurred in deleting file!\n";
@@ -294,7 +294,7 @@ void* server(void* d) {
 	file2.close();
 	// we don't need this l anywhere though
 
-	std::cout << "Server tread has spawned" << std::endl;
+	//std:cout << "Server tread has spawned" << std::endl;
 
 	// The server thread never returns, it keeps checking if new transactions have been added to the queue 
 	while(true) {
@@ -346,18 +346,18 @@ void* server(void* d) {
 			}
 			args->txn = txn;
 
-			std::cout << "transaction parsed" << std::endl;
+			//std:cout << "transaction parsed" << std::endl;
 
 			// Sort the locks required to avoid deadlocking
 			std::sort(args->table_and_locks.begin(), args->table_and_locks.end());
 			
-			std::cout << "locks sorted" << std::endl;
+			//std:cout << "locks sorted" << std::endl;
 
 			// Create `transaction_final_execution` thread to execute parsed transactions
-			std::cout << "spawning final exec thread" << std::endl;
+			//std:cout << "spawning final exec thread" << std::endl;
 			pthread_t *p = (pthread_t *)malloc(sizeof(pthread_t));
 			pthread_create(p, NULL, transaction_final_execution, (void *)args);
-			std::cout << "final exec spawned" << std::endl;
+			//std:cout << "final exec spawned" << std::endl;
 		}
 		else{
 			pthread_mutex_unlock(&lock);
