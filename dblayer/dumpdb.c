@@ -18,13 +18,17 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 	while(rowIndex < rowsToBePrinted.size()) {
 		byte *tempCursor = cursor;
 		for (int i = 0; schema->numColumns; ++i) {
-			int x = schema->columns[rowsToBePrinted[i]]->type;
+			int x = schema->columns[i]->type;
 			if (x == 1) {
 				char tmp[999];
 				DecodeCString(cursor,tmp,999);
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << tmp;
 					++rowIndex;
+					if(j == rowsToBePrinted.size()-1)
+						std::cout << std::endl;
+					else
+						std::cout << ",";
 					if(rowIndex >= rowsToBePrinted.size())
 						break;
 				}
@@ -35,6 +39,10 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
+					if(j == rowsToBePrinted.size()-1)
+						std::cout << std::endl;
+					else
+						std::cout << ",";
 					if(rowIndex >= rowsToBePrinted.size())
 						break;
 				}
@@ -45,6 +53,10 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				if(i == rowsToBePrinted[rowIndex]) {
 					std::cout << out;
 					++rowIndex;
+					if(j == rowsToBePrinted.size())
+						std::cout << std::endl;
+					else
+						std::cout << ",";
 					if(rowIndex >= rowsToBePrinted.size())
 						break;
 				}
@@ -54,10 +66,6 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				fprintf(stderr, "Schema column type unknown, custom error!\n");
 				exit(EXIT_FAILURE);
 			}
-			if(i == rowsToBePrinted.size()-1)
-				std::cout << std::endl;
-			else
-				std::cout << ",";
 		}
 	}
 }
