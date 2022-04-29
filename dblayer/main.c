@@ -385,7 +385,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 1;	// Set number of client threads
+	int num_clients = 2;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;

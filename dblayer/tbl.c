@@ -28,10 +28,11 @@ void setNumSlots(byte *pageBuf, int nslots) {
 	EncodeInt(nslots, tempBuf);
 	memcpy(pageBuf, tempBuf, sizeof(int)); // store the new number of slots into the first 4 bytes of pageBuf
 	EncodeInt(-1, tempBuf);
-	for (int i = oldslots; i < nslots; ++i)
-		memcpy(pageBuf+(i+2)*sizeof(int), tempBuf, sizeof(int)); // sizeof(int)
+	for (int i = oldslots; i < nslots; ++i) {
+		memcpy(pageBuf+(i+2)*sizeof(int), tempBuf, sizeof(int));
 		// create nslots - oldslots new entries in the array storing the pointers
 		// this is always 1 in the other functions since we create a single slot precisely when we need one
+	}
 }
 
 int getNthSlotOffset(int slot, char *pageBuf) {
@@ -90,13 +91,13 @@ Table_Open(std::string dbname, Schema *schema, bool overwrite, Table **ptable)
 	int errval = PF_CreateFile(&dbname[0]);
 	if(errval < 0) // Create a new file using the pflayer.
 		return errval;
-	
+
 	// Create a new table and store the relevant information into it
 	Table *newTable = (Table*) malloc(sizeof(Table));
 	newTable->schema = schema;
 	newTable->fd = PF_OpenFile(&dbname[0]);
-
 	*ptable = newTable;
+
 	return 0;
 
 	// Initialize PF, create PF file,
@@ -125,22 +126,15 @@ Table_Close(Table *tbl) {
 
 int
 Table_Insert(Table *tbl, byte *record, int len, RecId *rid) {
-	// UNIMPLEMENTED;
-	
 	int fd = tbl->fd;
 	byte* pgbuf;
-
-	// printf("Length %d\nRecord: ", len);
-	// char tempArr[999];
-	// DecodeCString(record, tempArr, 999);
-	// printf("%s\n", tempArr);
-
 
 	int pgnum = -1;
 	int res = PF_GetFirstPage(fd, &pgnum, &pgbuf); // store the first page into pgbuf
 	while(true) {
 		// if we have reached eof (so there is no page at the given position), unfix the old page and allocate a new page
 		if(res == PFE_EOF) {
+			std::cout << "REACHED EOF!" << std::endl;
 			byte tempBuf[999];
 			PF_UnfixPage(fd, pgnum, TRUE);
 			PF_AllocPage(fd, &pgnum, &pgbuf);
@@ -149,14 +143,19 @@ Table_Insert(Table *tbl, byte *record, int len, RecId *rid) {
 			memcpy(pgbuf, tempBuf, sizeof(int));
 			EncodeInt(PF_PAGE_SIZE, tempBuf);
 			memcpy(pgbuf + sizeof(int), tempBuf, sizeof(int));
+			std::cout << "NUMBER OF SLOTS PFE_EOF : " << getNumSlots(pgbuf) << std::endl;
 			setNumSlots(pgbuf, 1);
 			break;
 		}
 		if(res == PFE_OK) {
+			std::cout << "NUMBER OF SLOTS PFE_OK : " << getNumSlots(pgbuf) << std::endl;
 			// find the amount of free space that would be left after we create a new slot entry (note the +3 instead of +2!)
 			int freeSpace = (getFreePtr(pgbuf) - (getNumSlots(pgbuf) + 3)*sizeof(int));
 			// if this is enough to store the given record, increase the number of slots by 1
 			if(freeSpace >= len) {
+				for (int i = 0; i < 3; ++i)
+					std::cout << *((int*)(pgbuf+sizeof(int)*i)) << std::endl;
+				std::cout << getNumSlots(pgbuf) << std::endl;
 				setNumSlots(pgbuf, getNumSlots(pgbuf)+1);
 				break;
 			}
@@ -270,7 +269,7 @@ Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &outp
 }
 
 void
-printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList, std::string &output) {
+printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList, std::string &output, int indexCol, int op, int value) {
 	std::vector<int> rowsToBePrinted;
 	if(colList != NULL) {
 		for (int i = 0; i < colList->size(); ++i) {
@@ -304,7 +303,7 @@ printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std
 			int length = getLen(slot, pgbuf);
 			memcpy(record, pgbuf+offset, length);
 			// call the function on the given thing
-			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output);
+			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output, indexCol, op, value);
 		}
 		PF_UnfixPage(fd, pgnum, FALSE);
 		// iterate through the pages one by one
