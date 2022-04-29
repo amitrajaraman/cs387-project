@@ -134,7 +134,7 @@ Table_Insert(Table *tbl, byte *record, int len, RecId *rid) {
 	while(true) {
 		// if we have reached eof (so there is no page at the given position), unfix the old page and allocate a new page
 		if(res == PFE_EOF) {
-			std::cout << "REACHED EOF!" << std::endl;
+			// std::cout << "REACHED EOF!" << std::endl;
 			byte tempBuf[999];
 			PF_UnfixPage(fd, pgnum, TRUE);
 			PF_AllocPage(fd, &pgnum, &pgbuf);
@@ -143,19 +143,19 @@ Table_Insert(Table *tbl, byte *record, int len, RecId *rid) {
 			memcpy(pgbuf, tempBuf, sizeof(int));
 			EncodeInt(PF_PAGE_SIZE, tempBuf);
 			memcpy(pgbuf + sizeof(int), tempBuf, sizeof(int));
-			std::cout << "NUMBER OF SLOTS PFE_EOF : " << getNumSlots(pgbuf) << std::endl;
+			// std::cout << "NUMBER OF SLOTS PFE_EOF : " << getNumSlots(pgbuf) << std::endl;
 			setNumSlots(pgbuf, 1);
 			break;
 		}
 		if(res == PFE_OK) {
-			std::cout << "NUMBER OF SLOTS PFE_OK : " << getNumSlots(pgbuf) << std::endl;
+			// std::cout << "NUMBER OF SLOTS PFE_OK : " << getNumSlots(pgbuf) << std::endl;
 			// find the amount of free space that would be left after we create a new slot entry (note the +3 instead of +2!)
 			int freeSpace = (getFreePtr(pgbuf) - (getNumSlots(pgbuf) + 3)*sizeof(int));
 			// if this is enough to store the given record, increase the number of slots by 1
 			if(freeSpace >= len) {
-				for (int i = 0; i < 3; ++i)
-					std::cout << *((int*)(pgbuf+sizeof(int)*i)) << std::endl;
-				std::cout << getNumSlots(pgbuf) << std::endl;
+				// for (int i = 0; i < 3; ++i)
+				// 	std::cout << *((int*)(pgbuf+sizeof(int)*i)) << std::endl;
+				// std::cout << getNumSlots(pgbuf) << std::endl;
 				setNumSlots(pgbuf, getNumSlots(pgbuf)+1);
 				break;
 			}

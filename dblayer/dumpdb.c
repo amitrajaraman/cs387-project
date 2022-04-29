@@ -15,9 +15,10 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 
 	// Iterate through the columns
 	int rowIndex = 0;
+	std::string currOutput;
 	while(rowIndex < rowsToBePrinted.size()) {
+		int flag = 0;
 		byte *tempCursor = cursor;
-		std::string currOutput;
 		for (int i = 0; i < schema->numColumns; ++i) {
 			int x = schema->columns[i]->type;
 			if (x == 1) {
@@ -32,29 +33,29 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			else if (x == 2) {
 				int out = DecodeInt(tempCursor);
 				if(i == indexCol) {
-					if(op == 1) {
-						if(out != value)
-							break;
+					if(op == 1 && out != value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 2) {
-						if(out >= value)
-							break;
+					else if(op == 2 && out >= value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 3) {
-						if(out <= value)
-							break;
+					else if(op == 3 && out <= value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if (op == 4) {
-						if(out > value)
-							break;
+					else if (op == 4 && out > value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 5) {
-						if(out < value)
-							break;
+					else if(op == 5 && out < value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if (op == 6) {
-						if(out == value)
-							break;
+					else if (op == 6 && out == value) {
+						currOutput = "";
+						flag = 1;
 					}
 				}
 				if(i == rowsToBePrinted[rowIndex]) {
@@ -66,29 +67,29 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			else if (x == 3) {
 				long long out = DecodeLong(tempCursor);
 				if(i == indexCol) {
-					if(op == 1) {
-						if(out != value)
-							break;
+					if(op == 1 && out != value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 2) {
-						if(out >= value)
-							break;
+					else if(op == 2 && out >= value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 3) {
-						if(out <= value)
-							break;
+					else if(op == 3 && out <= value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if (op == 4) {
-						if(out > value)
-							break;
+					else if (op == 4 && out > value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if(op == 5) {
-						if(out < value)
-							break;
+					else if(op == 5 && out < value) {
+						currOutput = "";
+						flag = 1;
 					}
-					else if (op == 6) {
-						if(out == value)
-							break;
+					else if (op == 6 && out == value) {
+						currOutput = "";
+						flag = 1;
 					}
 				}
 				if(i == rowsToBePrinted[rowIndex]) {
@@ -101,17 +102,19 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 				fprintf(stderr, "Schema column type unknown, custom error!\n");
 				exit(EXIT_FAILURE);
 			}
-			if(i == rowsToBePrinted[rowIndex-1]) {
+			if(rowIndex > 0 && i == rowsToBePrinted[rowIndex-1]) {
 				if(rowIndex == rowsToBePrinted.size())
 					currOutput += "\n";
 				else
 					currOutput += ",";
 			}
-			output += currOutput;
 			if(rowIndex >= rowsToBePrinted.size())
 				break;
 		}
+		if(flag == 1)
+			break;
 	}
+	output += currOutput;
 }
 
 // void

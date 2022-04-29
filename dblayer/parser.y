@@ -362,7 +362,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			local = q[0] + "_" + std::to_string(client_id) + ".db";
 		else 
 			local = q[0] + ".db";
-		std::cout << "inside dump " << local << std::endl;
+		// std::cout << "inside dump " << local << std::endl;
 		int ret = Table_Open(local, schema, false, &tbl);
 
 		if(ret < 0) {
@@ -518,7 +518,7 @@ int parse_query(std::string input, int *res) {
 
 	global_stat = 1;
 	yyparse();
-	std::cout << "after yyparse, get value: " << global_stat << std::endl;
+	// std::cout << "after yyparse, get value: " << global_stat << std::endl;
 	*(res) = global_stat;
 
 	if(stopFlag)
@@ -533,6 +533,7 @@ int parse_query(std::string input, int *res) {
 int yyerror(std::string msg) {
 	fprintf(stderr, "%s\n", msg.c_str());
 	global_stat = 0;
+	return 0;
 }
 
 int readInputForLexer( char *buffer, int *numBytesRead, int maxBytesToRead ) {

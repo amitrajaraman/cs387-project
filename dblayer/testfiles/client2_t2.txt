@@ -1,2 +1,2 @@
-create table file datac.csv index 2
-dump all datac
+create table file datab.csv index 2
+dump all datab

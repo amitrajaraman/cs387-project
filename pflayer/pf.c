@@ -323,7 +323,7 @@ IMPLEMENTATION NOTES:
         return(PFerrno);
     }
 
-    printf("File descriptor of %s is %d.\n", fname, fd);
+    // printf("File descriptor of %s is %d.\n", fname, fd);
 
     /* open the file */
     if ((PFftab[fd].unixfd = open(fname,O_RDWR))< 0) {

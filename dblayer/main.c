@@ -63,6 +63,7 @@ void* client(void* d) {
             myfile.close();
 		}
 	}
+	return NULL;
 }
 struct thread_args {
 	std::vector<std::pair<std::string,int> > table_and_locks;
@@ -172,7 +173,7 @@ void* transaction_final_execution(void* _args) {
 		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res, output_temp);
         output = output + output_temp;
 		if(res == 1)
-			std::cout << "A query was executed completely" << std::endl;
+			std::cout << "A query of " << args->txn->client_id << " was executed completely" << std::endl;
 		else
 			std::cout << "Query execution error!" << std::endl;
 	}
@@ -247,7 +248,7 @@ void* transaction_final_execution(void* _args) {
 			std::cout<<"\nError Occurred in deleting file!\n";
 	}
 	for(int i = 0; i < args->created_tables.size(); i++) {
-		std::cout << args->created_tables[i] << std::endl;
+		// std::cout << args->created_tables[i] << std::endl;
 		std::string old_file = args->created_tables[i] + "_" + std::to_string(client_id) + ".db";
 		std::string new_file = args->created_tables[i] + ".db";
 		std::ifstream ini_file1(old_file);
@@ -285,6 +286,8 @@ void* transaction_final_execution(void* _args) {
 	else
 		std::cout << "Client " << client_id << " has aborted transaction " << trans_id << std::endl;
 		
+
+	return NULL;
 }
 
 void* server(void* d) {
@@ -385,7 +388,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 2;	// Set number of client threads
+	int num_clients = 1;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;

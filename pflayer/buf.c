@@ -440,6 +440,8 @@ IMPLEMENTATION NOTES:
             if ((error=PFhashDelete(fd,bpage->page))!= PFE_OK) {
                 /* internal error */
                 printf("Internal error:PFbufReleaseFile()\n");
+                int* ptr = NULL;
+                int x = *ptr;
                 exit(1);
             }
 
@@ -449,7 +451,7 @@ IMPLEMENTATION NOTES:
             PFbufUnlink(temppage);
             PFbufInsertFree(temppage);
 
-        } else	{
+        } else {
             bpage = bpage->nextpage;
         }
     }
