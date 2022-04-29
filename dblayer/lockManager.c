@@ -44,14 +44,14 @@ int lockManager::getLocks(int clientId, std::vector<std::pair<std::string,int>> 
 	}
 	for (auto tbl : requestedLocks) {
 		if(tbl.second == 1) {
-			while(lockMap[tbl.first].xAcquired != 0)
+			while(lockMap[tbl.first].xAcquired > 0)
 				pthread_cond_wait(&lmCond, &lmLock);
 			sem_post(lockMap[tbl.first].sLock);
 			++lockMap[tbl.first].lockCount;
 			std::cout << "Acquired slock of " << tbl.first << std::endl;
 		}
 		else if(tbl.second == 0) {
-			while(lockMap[tbl.first].lockCount > 0)
+			while(lockMap[tbl.first].lockCount > 0 || lockMap[tbl.first].xAcquired > 0)
 				pthread_cond_wait(&lmCond, &lmLock);
 			pthread_mutex_lock(&lockMap[tbl.first].xLock);
 			lockMap[tbl.first].xAcquired = 1;
