@@ -58,7 +58,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 						flag = 1;
 					}
 				}
-				if(i == rowsToBePrinted[rowIndex]) {
+				if(flag != 1 && i == rowsToBePrinted[rowIndex]) {
 					currOutput += std::to_string(out);
 					++rowIndex;
 				}
@@ -92,7 +92,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 						flag = 1;
 					}
 				}
-				if(i == rowsToBePrinted[rowIndex]) {
+				if(flag != 1 && i == rowsToBePrinted[rowIndex]) {
 					currOutput += std::to_string(out);
 					++rowIndex;
 				}

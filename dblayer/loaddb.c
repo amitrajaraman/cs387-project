@@ -155,6 +155,7 @@ insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index,
 	while(getline(str, tmp, ';'))
 		toks.push_back(tmp);
 	
+	// std::cout << "INDEX IS " << index;	
 	int inp_v = std::stoi(toks[index]);
 	for(int i=0; i<constr.size(); i++){
 		if((constr[i]->op == 1 && inp_v != constr[i]->val) ||
