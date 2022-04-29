@@ -61,11 +61,11 @@ loadCSV(std::string file, int index, int i = -1) {
 	if(i == -1) {
 		// -1 if we want to create data.db and data.db.0
 		db_name = file.substr(0, file.length()-4) + ".db";
-		index_name = file.substr(0, file.length()-4) + ".db.0";
+		// index_name = file.substr(0, file.length()-4) + ".db.0";
 	} else {
 		// else we create data_<i>.db and data_<i>.db.0
 		db_name = file.substr(0, file.length()-4) + "_" + std::to_string(i) + ".db";
-		index_name = file.substr(0, file.length()-4) + "_" + std::to_string(i) + ".db.0";
+		// index_name = file.substr(0, file.length()-4) + "_" + std::to_string(i) + ".db.0";
 	}
 
 	file_ptr = fopen(&db_name[0], "r");
@@ -100,12 +100,12 @@ loadCSV(std::string file, int index, int i = -1) {
 	checkerr(err);
 	// Create an index for the population field
 
-	err = AM_CreateIndex(&db_name[0], 0,'i', 4);
-	checkerr(err);
+	// err = AM_CreateIndex(&db_name[0], 0,'i', 4);
+	// checkerr(err);
 
-	int indexFD = PF_OpenFile(&index_name[0]);
+	// int indexFD = PF_OpenFile(&index_name[0]);
 	// ----
-	tbl->indexFd = indexFD;
+	// tbl->indexFd = indexFD;
 	char *tokens[MAX_TOKENS];
 	char record[MAX_PAGE_SIZE];
 
@@ -129,15 +129,15 @@ loadCSV(std::string file, int index, int i = -1) {
 		int index_value = atoi(tokens[index]);
 
 		// ----
-		err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
+		// err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
 		checkerr(err);
 		// ----
 	}
 
 	fclose(fp);
 	Table_Close(tbl);
-	err = PF_CloseFile(indexFD);
-	checkerr(err);
+	// err = PF_CloseFile(indexFD);
+	// checkerr(err);
 	schemaTxt.erase(std::remove(schemaTxt.begin(), schemaTxt.end(), '\n'), schemaTxt.end());
 	return schemaTxt;
 }
@@ -169,7 +169,7 @@ insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index,
 	}
 
 	// Create an index for the population field
-	int indexFD = PF_OpenFile(&index_name[0]);
+	// int indexFD = PF_OpenFile(&index_name[0]);
 
 	char *tokens[MAX_TOKENS];
 	char record[MAX_PAGE_SIZE];
@@ -188,16 +188,16 @@ insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index,
 	// ----
 
 	// Indexing on the population column 
-	int index_value = atoi(tokens[index]);
+	// int index_value = atoi(tokens[index]);
 
 	// ----
-	err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
-	checkerr(err);
+	// err = AM_InsertEntry(indexFD, 'i', 4, (char*)&index_value, rid);	// Add the data into the index's data structure too 
+	// checkerr(err);
 	// ----
 	
 	Table_Close(tbl);
-	err = PF_CloseFile(indexFD);
-	checkerr(err);
+	// err = PF_CloseFile(indexFD);
+	// checkerr(err);
 
 	return 0;
 

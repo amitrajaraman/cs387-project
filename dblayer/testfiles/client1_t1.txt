@@ -1,3 +1,2 @@
 create table file dataa.csv index 2
-insert (Akash;Cherukuri;10) into dataa
 dump all dataa
