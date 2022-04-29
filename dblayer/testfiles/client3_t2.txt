@@ -1,3 +1,3 @@
-insert (H,I,934) into datab
+insert (H;I;934) into datab
 dump Country,Population datab where gt 1000
-insert (J,K,8929) into datab
+insert (J;K;8929) into datab
