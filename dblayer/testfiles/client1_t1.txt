@@ -1,2 +1,8 @@
 create table file dataa.csv index 2
 dump all dataa
+dump all data
+help
+git
+insert (Benin;Porto-Novo;11175692) into data
+insert (Fiji;Suva;905502) into dataa
+dump 
