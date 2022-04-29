@@ -105,6 +105,7 @@ void* transaction_final_execution(void* _args) {
 			} else {
 				//Something went wrong
 				printf("Cannot read File\n");
+				res = 0;
 			}
 			ini_file.close();
 			out_file.close();
@@ -140,6 +141,7 @@ void* transaction_final_execution(void* _args) {
 			} else {
 				//Something went wrong
 				printf("Cannot read File\n");
+				res = 0;
 			}
 			ini_file.close();
 			out_file.close();
@@ -170,12 +172,16 @@ void* transaction_final_execution(void* _args) {
 		// std::cout << "Copied table " << copied_table << " Copied Metadata " << copied_meta_data << " Client Id " << client_id << std::endl;
 		
 		std::string output_temp;
-		executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res, output_temp);
-        output = output + output_temp;
+		if(res == 1){
+			executeQuery(args->qcs[i], args->qs[i], args->colss[i], args->conds[i], args->txn->client_id, copied_meta_data, copied_table, &res, output_temp);
+			output = output + output_temp;
+		}
 		if(res == 1)
 			std::cout << "A query of " << args->txn->client_id << " was executed completely" << std::endl;
-		else
+		else{
 			std::cout << "Query execution error in client " << args->txn->client_id << std::endl;
+			break;
+		}
 	}
 
 	// After the query has executed completely, copy back the modifed database and index from client to the main server
@@ -388,7 +394,7 @@ void* server(void* d) {
 
 int main(int argc, char* argv[]) {
 
-	int num_clients = 2;	// Set number of client threads
+	int num_clients = 1;	// Set number of client threads
 	int num_server = 1;	 // Number of server threads will always be 1
 
 	int *client_thread_id;
