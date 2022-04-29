@@ -369,7 +369,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			std::cout << "Result not available" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, NULL, output);
+		printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
 		Table_Close(tbl);
     }
     else if(i == 7){
@@ -424,7 +424,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 			std::cout << "Result not available" << std::endl;
 			*res = 0;
 		}
-		printAllRows(tbl, schema, printRow, &col, output);
+		printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
 		Table_Close(tbl);
     }
     else if(i == 9){

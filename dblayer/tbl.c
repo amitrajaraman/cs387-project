@@ -235,38 +235,38 @@ Table_Get(Table *tbl, RecId rid, byte *record, int maxlen) {
 	return length; // return size of record
 }
 
-void
-Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &output) {
-	std::vector<int> rowsToBePrinted;
-	for (int i = 0; i < tbl->schema->numColumns; ++i)
-		rowsToBePrinted.push_back(i);
-	char *pgbuf;
-	int pgnum;
-	byte record[999];
-	int fd = tbl->fd;
-	// get the first page
-	int res = PF_GetFirstPage(fd, &pgnum, &pgbuf);
-	while(res == PFE_OK) {
-		// iterate through each of the slots within the page
-		int numSlots = getNumSlots(pgbuf);
-		for (int slot = 0; slot < numSlots; ++slot) {
-			int offset = getNthSlotOffset(slot,pgbuf);
-			int length = getLen(slot, pgbuf);
-			memcpy(record, pgbuf+offset, length);
-			// call the function on the given thing
-			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output);
-		}
-		PF_UnfixPage(fd, pgnum, FALSE);
-		// iterate through the pages one by one
-		res = PF_GetNextPage(fd, &pgnum, &pgbuf);
-	}
+// void
+// Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &output) {
+// 	std::vector<int> rowsToBePrinted;
+// 	for (int i = 0; i < tbl->schema->numColumns; ++i)
+// 		rowsToBePrinted.push_back(i);
+// 	char *pgbuf;
+// 	int pgnum;
+// 	byte record[999];
+// 	int fd = tbl->fd;
+// 	// get the first page
+// 	int res = PF_GetFirstPage(fd, &pgnum, &pgbuf);
+// 	while(res == PFE_OK) {
+// 		// iterate through each of the slots within the page
+// 		int numSlots = getNumSlots(pgbuf);
+// 		for (int slot = 0; slot < numSlots; ++slot) {
+// 			int offset = getNthSlotOffset(slot,pgbuf);
+// 			int length = getLen(slot, pgbuf);
+// 			memcpy(record, pgbuf+offset, length);
+// 			// call the function on the given thing
+// 			callbackfn(callbackObj, (pgnum << 16) | slot, record, length, rowsToBePrinted, output);
+// 		}
+// 		PF_UnfixPage(fd, pgnum, FALSE);
+// 		// iterate through the pages one by one
+// 		res = PF_GetNextPage(fd, &pgnum, &pgbuf);
+// 	}
 
-	return;
+// 	return;
 
-	// For each page obtained using PF_GetFirstPage and PF_GetNextPage
-	//    for each record in that page,
-	//          callbackfn(callbackObj, rid, record, recordLen)
-}
+// 	// For each page obtained using PF_GetFirstPage and PF_GetNextPage
+// 	//    for each record in that page,
+// 	//          callbackfn(callbackObj, rid, record, recordLen)
+// }
 
 void
 printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *colList, std::string &output, int indexCol, int op, int value) {

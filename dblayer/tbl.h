@@ -55,7 +55,7 @@ void
 Table_Scan(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::string &output);
 
 void
-printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *, std::string &s);
+printAllRows(Table *tbl, void *callbackObj, ReadFunc callbackfn, std::vector<std::string> *, std::string &s, int, int, int);
 
 
 #endif

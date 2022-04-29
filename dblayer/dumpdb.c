@@ -31,7 +31,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			}
 			else if (x == 2) {
 				int out = DecodeInt(tempCursor);
-				if(i == indexRow) {
+				if(i == indexCol) {
 					if(op == 1) {
 						if(out != value)
 							break;
@@ -65,7 +65,7 @@ printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rows
 			}
 			else if (x == 3) {
 				long long out = DecodeLong(tempCursor);
-				if(i == indexRow) {
+				if(i == indexCol) {
 					if(op == 1) {
 						if(out != value)
 							break;

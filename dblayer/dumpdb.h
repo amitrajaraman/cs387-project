@@ -17,7 +17,7 @@ extern "C" {
 
 #define checkerr(err) {if (err < 0) {PF_PrintError(); exit(1);}}
 
-void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted, std::string &output);
+void printRow(void *callbackObj, RecId rid, byte *row, int len, std::vector<int> rowsToBePrinted, std::string &output, int, int, int);
 
-void index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList, std::string &output);
+// void index_scan(Table *tbl, Schema *schema, int indexFD, int op, int value, std::vector<std::string> *colList, std::string &output);
 #endif
