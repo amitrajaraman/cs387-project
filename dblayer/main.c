@@ -9,6 +9,9 @@
 #include <semaphore.h>
 #include "lockManager.h"
 #include "client.h"
+extern "C" {
+	#include "../pflayer/pf.h"
+}
 
 using directory_iterator = std::experimental::filesystem::directory_iterator;
 extern 
@@ -307,7 +310,7 @@ void* server(void* d) {
 	// we don't need this l anywhere though
 
 	//std:cout << "Server tread has spawned" << std::endl;
-
+	PF_Init();
 	// The server thread never returns, it keeps checking if new transactions have been added to the queue 
 	while(true) {
 		// If the transaction queue is not empty, get the top-most txn and execute its queries

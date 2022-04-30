@@ -362,8 +362,7 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 					if(constr_meta_data[q[1]][i]->constr_name == q[0]){
 						std::cout << "constraint with same name already exists for this table!" << std::endl;
 						*res = 0;
-						if(tbl)
-							Table_Close(tbl);
+						Table_Close(tbl);
 						return -1;
 					}
 				
@@ -603,8 +602,6 @@ int parse_query(std::string input, int *res) {
 		return 0;
 
 	delete[] globalInputText;	
-	// if(tbl)
-	// 	Table_Close(tbl);
 	return 1;
 }
 

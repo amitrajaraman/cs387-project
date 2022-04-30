@@ -399,11 +399,11 @@ RETURN VALUE:
 *****************************************************************************/
 {
 
+    pthread_mutex_lock(&pf_mutex);
     printf("ATTEMPTING TO CLOSE FD %d WITH NAME %s\n", fd, PFftab[fd].fname);
     // PFhashPrint();
     // printf("\n");
 
-    pthread_mutex_lock(&pf_mutex);
 
     int error;
 
