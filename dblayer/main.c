@@ -363,6 +363,8 @@ void* server(void* d) {
 					args->conds.push_back(cond1);
 				}
 			}
+			std::sort(args->created_tables.begin(), args->created_tables.end());
+    		args->created_tables.erase(std::unique(args->created_tables.begin(), args->created_tables.end()), args->created_tables.end());
 
 			if(!abort_trans){
 				args->txn = txn;

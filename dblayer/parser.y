@@ -233,20 +233,36 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
     if(i == 0){
         //create table data_<i>.db and index file data_<i>.db.o
         std::string schemaTxt = loadCSV(q[0], stoi(q[1]), client_id);
-		std::ofstream outfile;
-		std::string local;
-		if(a)
-			local = "meta_data_" + std::to_string(client_id) + ".db";
-		else 
-			local = "meta_data.db";
-		outfile.open(local, std::ios_base::app);
-		std::string s = q[0];
-		s = s.substr(0, s.length()-4);
-		if(schemaTxt[schemaTxt.length()-1] == '\n' || schemaTxt[schemaTxt.length()-1] == '\r')
-			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
-		else
-			outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
-		std::cout << "Created table!\n";
+		if(schemaTxt == "") {
+			*res = 0;
+		} else {
+			std::map<std::string, std::string> schema_meta_data;
+			std::map<std::string, int> index_meta_data;
+			std::map<std::string, std::vector<Constraint*> > constr_meta_data;
+			std::string local;
+			if(a)
+				local = "meta_data_" + std::to_string(client_id) + ".db";
+			else 
+				local = "meta_data.db";
+			std::string s = q[0];
+			s = s.substr(0, s.length()-4);
+			load_meta_data(schema_meta_data, index_meta_data, constr_meta_data, local);
+
+			if(schema_meta_data.find(s) != schema_meta_data.end()) {
+				std::cout << "File exists!" << std::endl;
+				*res = 0;
+			}
+			else {
+				std::ofstream outfile;
+				outfile.open(local, std::ios_base::app);
+
+				if(schemaTxt[schemaTxt.length()-1] == '\n' || schemaTxt[schemaTxt.length()-1] == '\r')
+					outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()-1) + ";" + q[1] << std::endl;
+				else
+					outfile << "$" + s + ";" + schemaTxt.substr(0, schemaTxt.length()) + ";" + q[1] << std::endl;
+				std::cout << "Created table!\n";
+			}
+		}
     }
     else if(i == 1){
         //quit
