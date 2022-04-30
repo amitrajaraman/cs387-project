@@ -15,7 +15,7 @@ Create files `client<i>_t<j>.txt` with queries for jth transaction for the ith c
 * From `dblayer`, run `./interface` to open the terminal.
 * Or alternatively run `./run.sh`
 
-It will save the outputs for client<i> in the file `client_<i>.output`. And if the transaction is aborted then the all the changes are not reflected in the database and the output file will not contain the output of the aborted transaction.
+It will save the outputs for `client<i>` in the file `client_<i>.output`. And if the transaction is aborted then the all the changes are not reflected in the database and the output file will not contain the output of the aborted transaction.
 
 The types of queries that may be performed are as follows:
 * `create table file <file_name> index <col_number>`. This creates a table from the csv file `<file_name>`, with the name of the table being the filename without the csv extension. The first row of the file is taken as the schema, and it must be of a form similar to `Country:varchar,Capital:varchar,Population:int`. The `<col_number>`th column is taken as the index of the table.
