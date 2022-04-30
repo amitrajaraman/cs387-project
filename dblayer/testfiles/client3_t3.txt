@@ -1,4 +1,4 @@
 dump all datab where gt 283
 dump all datab where lt 548
-dump all datab
-dump Capital,Population dataa
+dump all data
+dump Capital,Population data

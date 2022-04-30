@@ -196,7 +196,6 @@ insertRow(Table *tbl, Schema *sch, std::string name, std::string row, int index,
 	// checkerr(err);
 	// ----
 	
-	Table_Close(tbl);
 	// err = PF_CloseFile(indexFD);
 	// checkerr(err);
 

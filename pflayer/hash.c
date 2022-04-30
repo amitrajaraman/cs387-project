@@ -25,11 +25,13 @@ GLOBAL VARIABLES MODIFIED:
 	PFhashtbl
 *****************************************************************************/
 {
+    pthread_mutex_lock(&PFhashtbl_mutex);
     int i;
 
     for (i=0; i < PF_HASH_TBL_SIZE; i++) {
         PFhashtbl[i] = NULL;
     }
+    pthread_mutex_unlock(&PFhashtbl_mutex);
 }
 
 
@@ -134,7 +136,6 @@ GLOBAL VARIABLES MODIFIED:
     // PFhashPrint();
 
     pthread_mutex_unlock(&PFhashtbl_mutex);
-
     return(PFE_OK);
 }
 
@@ -182,8 +183,8 @@ PFhashtbl
         /* not found */
         printf("Hash not found!\n");
         PFerrno = PFE_HASHNOTFOUND;
-        int* ptr = NULL;
-        int x = *ptr;
+        // int* ptr = NULL;
+        // int x = *ptr;
         pthread_mutex_unlock(&PFhashtbl_mutex);
         return(PFerrno);
     }
@@ -202,7 +203,6 @@ PFhashtbl
     free((char *)entry);
 
     pthread_mutex_unlock(&PFhashtbl_mutex);
-
     return(PFE_OK);
 }
 

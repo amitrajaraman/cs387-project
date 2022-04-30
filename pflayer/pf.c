@@ -208,10 +208,10 @@ GLOBAL VARIABLES MODIFIED:
 {
     int i;
     /* init the hash table */
+    pthread_mutex_lock(&pf_mutex);
     PFhashInit();
 
     /* init the file table to be not used*/
-    pthread_mutex_lock(&pf_mutex);
     for (i=0; i < PF_FTAB_SIZE; i++) {
         PFftab[i].fname = NULL;
     }
@@ -232,6 +232,7 @@ RETURN VALUE:
 int
 PF_CreateFile(char *fname /* name of file to create */)
 {
+    pthread_mutex_lock(&pf_mutex);
     int fd;	/* unix file descripotr */
     PFhdr_str hdr;	/* file header */
     int error;
@@ -239,6 +240,7 @@ PF_CreateFile(char *fname /* name of file to create */)
     if ((fd=open(fname,O_CREAT|O_EXCL|O_WRONLY,0664))<0) {
         /* unix error on open */
         PFerrno = PFE_UNIX;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFE_UNIX);
     }
     /* write out the file header */
@@ -253,12 +255,15 @@ PF_CreateFile(char *fname /* name of file to create */)
         }
         close(fd);
         unlink(fname);
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
     if ((error=close(fd)) == -1) {
         PFerrno = PFE_UNIX;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
+    pthread_mutex_unlock(&pf_mutex);
     return(PFE_OK);
 }
 
@@ -371,6 +376,8 @@ IMPLEMENTATION NOTES:
         return(PFerrno);
     }
 
+    printf("CREATED FD %d WITH NAME %s\n", fd, PFftab[fd].fname);
+
     pthread_mutex_unlock(&pf_mutex);
     return(fd);
 }
@@ -392,7 +399,7 @@ RETURN VALUE:
 *****************************************************************************/
 {
 
-    printf("ATTEMPTING TO CLOSE FD %d\n", fd);
+    printf("ATTEMPTING TO CLOSE FD %d WITH NAME %s\n", fd, PFftab[fd].fname);
     // PFhashPrint();
     // printf("\n");
 
@@ -532,6 +539,7 @@ RETURN VALUE:
     for (temppage= *pagenum+1; temppage<PFftab[fd].hdr.numpages; temppage++) {
         if ( (error=PFbufGet(fd,temppage,&fpage,PFreadfcn,
                              PFwritefcn))!= PFE_OK) {
+            pthread_mutex_unlock(&pf_mutex);
             return(error);
         } else if (fpage->nextfree == PF_PAGE_USED) {
             /* found a used page */
@@ -610,6 +618,7 @@ PF_GetThisPage(
         /* invalid page */
         if (PFbufUnfix(fd,pagenum,FALSE)!= PFE_OK) {
             printf("internal error:PFgetThis()\n");
+            pthread_mutex_unlock(&pf_mutex);
             exit(1);
         }
         PFerrno = PFE_INVALIDPAGE;
@@ -658,6 +667,7 @@ PF_AllocPage(
                             PFwritefcn))!= PFE_OK)
             /* can't get the page */
         {
+            pthread_mutex_unlock(&pf_mutex);
             return(error);
         }
         PFftab[fd].hdr.firstfree = fpage->nextfree;
