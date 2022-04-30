@@ -6,6 +6,7 @@
 #include "pf.h"
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "pftypes.h"
 #include "pfinternals.h"
 #include <unistd.h>
@@ -23,6 +24,7 @@ PFbufUsed(
 int PFerrno = PFE_OK;	/* last error message */
 
 static PFftab_ele PFftab[PF_FTAB_SIZE]; /* table of opened files */
+pthread_mutex_t pf_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* true if file descriptor fd is invaild */
 #define PFinvalidFd(fd) ((fd) < 0 || (fd) >= PF_FTAB_SIZE \
@@ -92,12 +94,14 @@ RETURN VALUE:
 
 *****************************************************************************/
 {
-    int i;
-
-    for (i=0; i < PF_FTAB_SIZE; i++)
+    // pthread_mutex_lock(&pf_mutex);
+    for (int i=0; i < PF_FTAB_SIZE; i++)
         if (PFftab[i].fname == NULL) {
+            PFftab[i].fname = "nonempty";
+            // pthread_mutex_unlock(&pf_mutex);
             return(i);
         }
+    // pthread_mutex_unlock(&pf_mutex);
     return(-1);
 }
 
@@ -207,9 +211,11 @@ GLOBAL VARIABLES MODIFIED:
     PFhashInit();
 
     /* init the file table to be not used*/
+    pthread_mutex_lock(&pf_mutex);
     for (i=0; i < PF_FTAB_SIZE; i++) {
         PFftab[i].fname = NULL;
     }
+    pthread_mutex_unlock(&pf_mutex);
 }
 
 /****************************************************************************
@@ -274,19 +280,23 @@ RETURN VALUE:
 {
     int error;
 
+    pthread_mutex_lock(&pf_mutex);
     if (PFtabFindFname(fname)!= -1) {
         /* file is open */
         PFerrno = PFE_FILEOPEN;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
     if ((error =unlink(fname))!= 0) {
         /* unix error */
         PFerrno = PFE_UNIX;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
     /* success */
+    pthread_mutex_unlock(&pf_mutex);
     return(PFE_OK);
 }
 
@@ -315,11 +325,13 @@ IMPLEMENTATION NOTES:
 {
     int count;	/* # of bytes in read */
     int fd; /* file descriptor */
+    pthread_mutex_lock(&pf_mutex);
 
     /* find a free entry in the file table */
     if ((fd=PFftabFindFree())< 0) {
         /* file table full */
         PFerrno = PFE_FTABFULL;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -329,6 +341,7 @@ IMPLEMENTATION NOTES:
     if ((PFftab[fd].unixfd = open(fname,O_RDWR))< 0) {
         /* can't open the file */
         PFerrno = PFE_UNIX;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -343,6 +356,7 @@ IMPLEMENTATION NOTES:
             PFerrno = PFE_HDRREAD;
         }
         close(PFftab[fd].unixfd);
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
     /* set file header to be not changed */
@@ -353,9 +367,11 @@ IMPLEMENTATION NOTES:
         /* no memory */
         close(PFftab[fd].unixfd);
         PFerrno = PFE_NOMEM;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
+    pthread_mutex_unlock(&pf_mutex);
     return(fd);
 }
 
@@ -376,19 +392,25 @@ RETURN VALUE:
 *****************************************************************************/
 {
 
-    // printf("ATTEMPTING TO CLOSE FD %d\n", fd);
+    printf("ATTEMPTING TO CLOSE FD %d\n", fd);
+    // PFhashPrint();
+    // printf("\n");
+
+    pthread_mutex_lock(&pf_mutex);
 
     int error;
 
     if (PFinvalidFd(fd)) {
         /* invalid file descriptor */
         PFerrno = PFE_FD;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
 
     /* Flush all buffers for this file */
     if ( (error=PFbufReleaseFile(fd,PFwritefcn)) != PFE_OK) {
+        pthread_mutex_unlock(&pf_mutex);
         return(error);
     }
 
@@ -398,6 +420,7 @@ RETURN VALUE:
         if ((error=lseek(PFftab[fd].unixfd,(unsigned)0,L_SET)) == -1) {
             /* seek error */
             PFerrno = PFE_UNIX;
+            pthread_mutex_unlock(&pf_mutex);
             return(PFerrno);
         }
 
@@ -409,6 +432,7 @@ RETURN VALUE:
             } else	{
                 PFerrno = PFE_HDRWRITE;
             }
+            pthread_mutex_unlock(&pf_mutex);
             return(PFerrno);
         }
         PFftab[fd].hdrchanged = FALSE;
@@ -419,6 +443,7 @@ RETURN VALUE:
     /* close the file */
     if ((error=close(PFftab[fd].unixfd))== -1) {
         PFerrno = PFE_UNIX;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -426,6 +451,7 @@ RETURN VALUE:
     free((char *)PFftab[fd].fname);
     PFftab[fd].fname = NULL;
 
+    pthread_mutex_unlock(&pf_mutex);
     return(PFE_OK);
 }
 
@@ -484,18 +510,21 @@ RETURN VALUE:
 
 *****************************************************************************/
 {
+    pthread_mutex_lock(&pf_mutex);
     int temppage;	/* page number to scan for next valid page */
     int error;	/* error code */
     PFfpage *fpage;	/* pointer to file page */
 
     if (PFinvalidFd(fd)) {
         PFerrno = PFE_FD;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
 
     if (*pagenum < -1 || *pagenum >= PFftab[fd].hdr.numpages) {
         PFerrno = PFE_INVALIDPAGE;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -508,17 +537,20 @@ RETURN VALUE:
             /* found a used page */
             *pagenum = temppage;
             *pagebuf = (char *)fpage->pagebuf;
+            pthread_mutex_unlock(&pf_mutex);
             return(PFE_OK);
         }
 
         /* page is free, unfix it */
         if ((error=PFbufUnfix(fd,temppage,FALSE))!= PFE_OK) {
+            pthread_mutex_unlock(&pf_mutex);
             return(error);
         }
     }
 
     /* No valid used page found */
     PFerrno = PFE_EOF;
+    pthread_mutex_unlock(&pf_mutex);
     return(PFerrno);
 
 }
@@ -548,13 +580,16 @@ PF_GetThisPage(
     int error;
     PFfpage *fpage;
 
+    pthread_mutex_lock(&pf_mutex);
     if (PFinvalidFd(fd)) {
         PFerrno = PFE_FD;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
     if (PFinvalidPagenum(fd,pagenum)) {
         PFerrno = PFE_INVALIDPAGE;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -562,12 +597,14 @@ PF_GetThisPage(
         if (error== PFE_PAGEFIXED) {
             *pagebuf = fpage->pagebuf;
         }
+        pthread_mutex_unlock(&pf_mutex);
         return(error);
     }
 
     if (fpage->nextfree == PF_PAGE_USED) {
         /* page is used*/
         *pagebuf = (char *)fpage->pagebuf;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFE_OK);
     } else {
         /* invalid page */
@@ -576,8 +613,10 @@ PF_GetThisPage(
             exit(1);
         }
         PFerrno = PFE_INVALIDPAGE;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
+    pthread_mutex_unlock(&pf_mutex);
 }
 
 /****************************************************************************
@@ -604,8 +643,11 @@ PF_AllocPage(
     PFfpage *fpage;	/* pointer to file page */
     int error;
 
+    pthread_mutex_lock(&pf_mutex);
+
     if (PFinvalidFd(fd)) {
         PFerrno= PFE_FD;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
@@ -626,6 +668,7 @@ PF_AllocPage(
         if ((error=PFbufAlloc(fd,*pagenum,&fpage,PFwritefcn))!= PFE_OK)
             /* can't allocate a page */
         {
+            pthread_mutex_unlock(&pf_mutex);
             return(error);
         }
 
@@ -636,6 +679,7 @@ PF_AllocPage(
         /* mark this page dirty */
         if ((error=PFbufUsed(fd,*pagenum))!= PFE_OK) {
             printf("internal error: PFalloc()\n");
+            pthread_mutex_unlock(&pf_mutex);
             exit(1);
         }
 
@@ -653,6 +697,7 @@ PF_AllocPage(
     /* set return value */
     *pagebuf = fpage->pagebuf;
 
+    pthread_mutex_unlock(&pf_mutex);
     return(PFE_OK);
 }
 
@@ -731,17 +776,23 @@ PF_UnfixPage(int fd,	/* file descriptor */
             )
 {
 
+    pthread_mutex_lock(&pf_mutex);
+
     if (PFinvalidFd(fd)) {
         PFerrno = PFE_FD;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
     if (PFinvalidPagenum(fd,pagenum)) {
         PFerrno = PFE_INVALIDPAGE;
+        pthread_mutex_unlock(&pf_mutex);
         return(PFerrno);
     }
 
-    return(PFbufUnfix(fd,pagenum,dirty));
+    int tmp = PFbufUnfix(fd,pagenum,dirty);
+    pthread_mutex_unlock(&pf_mutex);
+    return(tmp);
 }
 
 /* error messages */

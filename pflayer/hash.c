@@ -2,12 +2,13 @@
    a file descriptor and a page number */
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include "pf.h"
 #include "pftypes.h"
 
 /* hash table */
 static PFhash_entry *PFhashtbl[PF_HASH_TBL_SIZE];
-
+pthread_mutex_t PFhashtbl_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void
 PFhashInit()
@@ -94,6 +95,8 @@ GLOBAL VARIABLES MODIFIED:
 
     // printf("HASH INSERT ENTRANCE\n");
 
+    pthread_mutex_lock(&PFhashtbl_mutex);
+
     int bucket;	/* bucket to insert the page */
     PFhash_entry *entry; /* pointer to new entry */
 
@@ -101,6 +104,7 @@ GLOBAL VARIABLES MODIFIED:
     if (PFhashFind(fd,page) != NULL) {
         /* page already inserted */
         PFerrno = PFE_HASHPAGEEXIST;
+        pthread_mutex_unlock(&PFhashtbl_mutex);
         return(PFerrno);
     }
 
@@ -111,6 +115,7 @@ GLOBAL VARIABLES MODIFIED:
     if ((entry=(PFhash_entry *)malloc(sizeof(PFhash_entry)))== NULL) {
         /* no mem */
         PFerrno = PFE_NOMEM;
+        pthread_mutex_unlock(&PFhashtbl_mutex);
         return(PFerrno);
     }
 
@@ -127,6 +132,8 @@ GLOBAL VARIABLES MODIFIED:
 
     // printf("HASH INSERT EXIT\n");
     // PFhashPrint();
+
+    pthread_mutex_unlock(&PFhashtbl_mutex);
 
     return(PFE_OK);
 }
@@ -150,12 +157,15 @@ GLOBAL VARIABLES MODIFIED:
 PFhashtbl
     *****************************************************************************/
 {
+    pthread_mutex_lock(&PFhashtbl_mutex);
+
     int bucket;	/* bucket for this page */
     PFhash_entry *entry;	/* entry to look for */
 
     /* find the bucket */
     // printf("ATTEMPTING TO DELETE FD %d, PAGE %d\n", fd, page);
     // PFhashPrint();
+    // printf("PRINTED\n");
     bucket = PFhash(fd,page);
     // printf("BUCKET : %d\n", bucket);
 
@@ -167,11 +177,17 @@ PFhashtbl
         }
     }
 
+    // printf("what is this before\n");
     if (entry == NULL) {
         /* not found */
+        printf("Hash not found!\n");
         PFerrno = PFE_HASHNOTFOUND;
+        int* ptr = NULL;
+        int x = *ptr;
+        pthread_mutex_unlock(&PFhashtbl_mutex);
         return(PFerrno);
     }
+    // printf("what is this after\n");
 
     /* get rid of this entry */
     if (entry == PFhashtbl[bucket]) {
@@ -184,6 +200,8 @@ PFhashtbl
         entry->nextentry->preventry = entry->preventry;
     }
     free((char *)entry);
+
+    pthread_mutex_unlock(&PFhashtbl_mutex);
 
     return(PFE_OK);
 }

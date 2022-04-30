@@ -1,6 +1,5 @@
 %{
 	#include "common_headers.hh"
-	Table *tbl = NULL;
 	static int globalReadOffset;
 	// Text to read:
 	char *globalInputText;
@@ -13,7 +12,6 @@
 	int stopFlag = 0;
 	int qc = -1;
 	int *glbl_res;
-	Schema* schema;
 
 	extern struct tokens token_table[1000];
 	std::vector<std::string> q;
@@ -230,6 +228,7 @@ condition
 // i is the client_id here
 int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,std::vector<int>cond,int client_id, int a, int b, int *res, std::string &output){
 	// a is 1 if we are supposed to use local metadata else it is 0, b is 1 if we are supposed to use local table
+    Table *tbl = NULL;
     if(i == 0){
         //create table data_<i>.db and index file data_<i>.db.o
         std::string schemaTxt = loadCSV(q[0], stoi(q[1]), client_id);
@@ -299,16 +298,17 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				std::cout << "Result not available" << std::endl;
 				*res = 0;
 			}
-
-			std::string index_name = "";
-			if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
-				std::cout << "Invalid insert of row!" << std::endl;
-				*res = 0;
-			}
-			else
-				std::cout << "Inserted successfully!" << std::endl;
-			if(tbl)
+			else {
+				std::string index_name = "";
+				if(insertRow(tbl, schema, index_name, q[0], index_meta_data[q[1]], constr_meta_data[q[1]]) != 0){
+					std::cout << "Invalid insert of row!" << std::endl;
+					*res = 0;
+				}
+				else
+					std::cout << "Inserted successfully!" << std::endl;
 				Table_Close(tbl);
+			}
+
 		}
     }
     else if(i == 5){
@@ -337,28 +337,31 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				local = q[1] + ".db";
 			
 			int ret = Table_Open(local, schema, false, &tbl);
-			if(ret<0){
+			if(ret < 0){
 				std::cout << "Result not available!" << std::endl;
 				*res = 0;
 			}
-			
-			for(int i=0; i<constr_meta_data[q[1]].size(); i++)
-				if(constr_meta_data[q[1]][i]->constr_name == q[0]){
-					std::cout << "constraint with same name already exists for this table!" << std::endl;
-					*res = 0;
-					return -1;
-				}
-			
-			std::ofstream outfile;
-			if(a)
-				local = "meta_data_" + std::to_string(client_id) + ".db";
-			else 
-				local = "meta_data.db";
-			outfile.open(local, std::ios_base::app);
-			outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
-			std::cout << "Added Constraint!" << std::endl;
-			if(tbl)
+			else {
+				for(int i=0; i<constr_meta_data[q[1]].size(); i++)
+					if(constr_meta_data[q[1]][i]->constr_name == q[0]){
+						std::cout << "constraint with same name already exists for this table!" << std::endl;
+						*res = 0;
+						if(tbl)
+							Table_Close(tbl);
+						return -1;
+					}
+				
+				std::ofstream outfile;
+				if(a)
+					local = "meta_data_" + std::to_string(client_id) + ".db";
+				else 
+					local = "meta_data.db";
+				outfile.open(local, std::ios_base::app);
+				outfile << "#" + q[1] + ";" + q[0] + ";" + std::to_string(cond[0]) + ";" + std::to_string(cond[1]) << std::endl; 
+				std::cout << "Added Constraint!" << std::endl;
 				Table_Close(tbl);
+			}
+			
 		}
     }
     else if(i == 6){
@@ -391,9 +394,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				std::cout << "Result not available" << std::endl;
 				*res = 0;
 			}
-			printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
-			if(tbl)
+			else {
+				printAllRows(tbl, schema, printRow, NULL, output, -1, -1, -1);
 				Table_Close(tbl);
+			}
 		}
     }
     else if(i == 7){
@@ -427,11 +431,12 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				std::cout << "Result not available" << std::endl;
 				*res = 0;
 			}
-			std::string index_name;
-
-			printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
-			if(tbl)
+			else {
+				std::string index_name;
+				printAllRows(tbl, schema, printRow, NULL, output, index_meta_data[q[0]], cond[0], cond[1]);
 				Table_Close(tbl);
+			}
+
 		}
     }
     else if(i == 8){
@@ -461,9 +466,10 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				std::cout << "Result not available" << std::endl;
 				*res = 0;
 			}
-			printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
-			if(tbl)
+			else {
+				printAllRows(tbl, schema, printRow, &col, output, -1, -1, -1);
 				Table_Close(tbl);
+			}
 		}
     }
     else if(i == 9){
@@ -494,11 +500,12 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				std::cout << "Result not available" << std::endl;
 				*res = 0;
 			}
-			std::string index_name;
+			else {
+				std::string index_name;
 
-			printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
-			if(tbl)
+				printAllRows(tbl, schema, printRow, &col, output, index_meta_data[q[0]], cond[0], cond[1]);
 				Table_Close(tbl);
+			}
 		}
     }
     else if(i == 10){
@@ -526,27 +533,28 @@ int executeQuery(int i, std::vector<std::string>q, std::vector<std::string>col,s
 				local = q[0] + ".db";
 
 			int ret = Table_Open(local, schema, false, &tbl);
-			if(ret<0){
+			if(ret < 0){
 				std::cout << "Result not available!" << std::endl;
 				*res = 0;
 			}
-			std::string index_name;
+			else {
+				std::string index_name;
 
-			if(b)
-				index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
-			else 
-				index_name = q[0] + ".db.0";
+				if(b)
+					index_name = q[0] + "_" + std::to_string(client_id) + ".db.0";
+				else 
+					index_name = q[0] + ".db.0";
 
-			if(constr_meta_data[q[0]].size() == 0)
-				output = "No constraints exist for this table!";
-			else{
-				output = output + "Constraint Name\tCondition\n";
-				for(int i=0; i<constr_meta_data[q[0]].size(); i++){
-					output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
+				if(constr_meta_data[q[0]].size() == 0)
+					output = "No constraints exist for this table!";
+				else{
+					output = output + "Constraint Name\tCondition\n";
+					for(int i=0; i<constr_meta_data[q[0]].size(); i++){
+						output = output + constr_meta_data[q[0]][i]->constr_name + "\t";
+					}
 				}
-			}
-			if(tbl)
 				Table_Close(tbl);
+			}
 		}
     }
 	return 0;

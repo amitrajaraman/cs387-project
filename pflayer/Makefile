@@ -17,7 +17,8 @@ testpf: testpf.o pflayer.a
 	$(CC) $(CFLAGS) -o testpf testpf.o pflayer.a
 
 testhash: testhash.o pflayer.a
-	$(CC) $(CFLAGS) -o testhash testhash.o pflayer.a
+	$(CC) $(CFLAGS) -o -pthread testhash testhash.o pflayer.a
+# 	$(CC) $(CFLAGS) -o testhash testhash.o pflayer.a
 
 $(OBJ): $(HDR)
 
