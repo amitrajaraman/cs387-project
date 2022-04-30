@@ -73,7 +73,7 @@ loadCSV(std::string file, int index, int i = -1) {
     {
         fclose(file_ptr);
 		std::cout << "file already exists" << std::endl;
-		return NULL;
+		return "";
     } 
 
 	FILE *fp = fopen(file.c_str() , "r");
