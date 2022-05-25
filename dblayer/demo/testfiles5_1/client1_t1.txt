@@ -1,0 +1,1 @@
+create table file datae.csv index 2

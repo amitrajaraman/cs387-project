@@ -1,0 +1,2 @@
+create table file datac.csv index 2
+dump Country,Capital datac

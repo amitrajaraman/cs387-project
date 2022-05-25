@@ -1,0 +1,1 @@
+dump Capital datac where lt 150000

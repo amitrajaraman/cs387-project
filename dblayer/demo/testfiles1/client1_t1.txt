@@ -1,0 +1,5 @@
+create table file dataa.csv index 2
+dump all dataa
+insert (India;Delhi;10000) into dataa
+dump Country,Population dataa
+dump Capital,Population dataa where lt 150000

@@ -1,0 +1,2 @@
+insert (A;B;20) into datac
+dump all datac

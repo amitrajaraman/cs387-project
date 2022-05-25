@@ -1,0 +1,2 @@
+insert (B;D;10) into datad
+dump all datad where gt 15

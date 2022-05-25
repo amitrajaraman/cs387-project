@@ -1,0 +1,2 @@
+insert (A;C;20) into datad
+dump all datad where lt 15
